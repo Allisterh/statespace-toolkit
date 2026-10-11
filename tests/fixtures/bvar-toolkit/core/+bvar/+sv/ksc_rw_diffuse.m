@@ -22,7 +22,6 @@
 % Mathematical Modelling and Numerical Optimisation, 1(1/2): 101-120.
 % Chan, J.C.C. (2013). Moving Average Stochastic Volatility Models with
 % Application to Inflation Forecast, Journal of Econometrics, 176(2): 162-172.
-% (c) 2012, Joshua Chan. Email: joshuacc.chan@gmail.com
 
 function [h,S] = ksc_rw_diffuse(ystar,h,omega2h,Vh)
 
