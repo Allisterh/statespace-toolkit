@@ -79,7 +79,7 @@ ll = ssm.intlike(y, speye(T), speye(T)/sig2, HH/omega2, tau0*ones(T,1));
 The arguments are $`\mathbf{y}`$, $`\mathbf{Z}`$, $`\mathbf{R}^{-1}`$, $`\mathbf{P}`$ and
 $`\mathbf{b}`$. The third is the precision matrix of the transitory component, and the three
 matrices are sparse. On the data of the first guide, at the true values $`\sigma^2 = 1`$,
-$`\omega^2 = 0.05`$ and $`\tau_0 = 2`$, it returns $`-298.0393`$. Two further outputs are
+$`\omega^2 = 0.05`$ and $`\tau_0 = 2`$, it returns $`-298.0393`$. Two additional outputs are
 $`\hat{\boldsymbol{\alpha}}`$ and $`\mathbf{K}`$.
 
 ## Step 3: Integrate Out the Initial Value Too
