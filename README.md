@@ -68,6 +68,9 @@ a script that runs the same analysis on your own series.
   One with stochastic volatility in the transitory component: such models beat an AR(4) in
   forecasting average US CPI inflation over the next year, and stochastic volatility in the trend
   as well does not help.
+- [Which Parameters of a GDP Nowcasting Model Should Vary over Time?](tutorials/midas_nowcast/)
+  The coefficients of a mixed-frequency (MIDAS) regression: letting them vary improves the
+  nowcasts of US real GDP growth, and letting the weights vary adds little.
 
 ## Reproduce a Paper
 
@@ -107,22 +110,22 @@ sampler from them.
 
 | Function | Does | Shown in |
 |---|---|---|
-| `ssm.simulate_states` | Draws a state path from its posterior, given the banded precision matrix of the states: the precision sampler of Chan and Jeliazkov (2009) | ex01-ex06, ex09, ex10, the tutorial |
-| `ssm.intlike` | Computes the log likelihood of a linear Gaussian state space model, with the states integrated out | ex02, the tutorial |
+| `ssm.simulate_states` | Draws a state path from its posterior, given the banded precision matrix of the states: the precision sampler of Chan and Jeliazkov (2009) | ex01-ex06, ex09, ex10, both tutorials |
+| `ssm.intlike` | Computes the log likelihood of a linear Gaussian state space model, with the states integrated out | ex02, the UC tutorial |
 | `ssm.select_obs` | Splits the stacked data into observed and missing values, keeping the precision matrix of the missing values banded | ex05 |
-| `ssm.restrict` | Conditions draws from a Gaussian on linear restrictions M*x = z, reusing the Cholesky factor that `ssm.simulate_states` returns | ex05, ex10 |
-| `ssm.diffmat` | Builds the first-difference matrix of a state equation, I - aL | ex01-ex03, ex06, ex07, ex09, ex10, the tutorial |
+| `ssm.restrict` | Conditions draws from a Gaussian on linear restrictions M*x = z, reusing the Cholesky factor that `ssm.simulate_states` returns | ex05, ex10, the MIDAS tutorial |
+| `ssm.diffmat` | Builds the first-difference matrix of a state equation, I - aL | ex01-ex03, ex06, ex07, ex09, ex10, both tutorials |
 | `ssm.lagpolymat` | Builds the matrix of a lag polynomial, such as second differences or an AR(2) | ex04 |
-| `ssm.surform` | Builds the design matrix of a regression whose coefficients vary over time | ex03, ex09, ex10, the tutorial |
+| `ssm.surform` | Builds the design matrix of a regression whose coefficients vary over time | ex03, ex09, ex10, both tutorials |
 | `ssm.mode_newton` | Finds the mode of a concave log density by Newton-Raphson, with a banded Hessian | ex08, and through `ssm.armh` |
 | `ssm.armh` | Takes the accept-reject Metropolis-Hastings step of Chan (2017), for states whose conditional distribution is not Gaussian | ex09 |
-| `ssm.ksc_rw_h0` | Draws the log-volatility path of a random walk by the auxiliary mixture sampler of Kim, Shephard and Chib (1998) | ex07, ex10, the tutorial |
-| `ssm.ksc_ar1_mean` | Draws the log-volatility path of a stationary AR(1) by the same sampler | ex08, the tutorial |
-| `ssm.ksc_rw_diffuse` | Draws the log-volatility path of a random walk whose first value has a normal prior with mean zero, by the same sampler | the tutorial |
+| `ssm.ksc_rw_h0` | Draws the log-volatility path of a random walk by the auxiliary mixture sampler of Kim, Shephard and Chib (1998) | ex07, ex10, the UC tutorial |
+| `ssm.ksc_ar1_mean` | Draws the log-volatility path of a stationary AR(1) by the same sampler | ex08, the UC tutorial |
+| `ssm.ksc_rw_diffuse` | Draws the log-volatility path of a random walk whose first value has a normal prior with mean zero, by the same sampler | both tutorials |
 | `ssm.ksc_rw_noncentered` | Draws a random-walk log-volatility in the noncentered form of Chan (2018), and returns the conditional mean and variance of its scale, which the Savage-Dickey ratio of that paper uses | not yet in an example |
-| `ssm.tnormrnd` | Draws from a truncated normal distribution | ex02, the tutorial |
-| `ssm.shaded_band` | Shades credible bands in figures | ex01, ex03, ex04, ex07-ex09 |
-| `ssm.inefficiency_factor` | Computes the inefficiency factor of MCMC draws, the number of draws that carry the information of one independent draw | the Gibbs sampling and integrated likelihood guides, the tutorial |
+| `ssm.tnormrnd` | Draws from a truncated normal distribution | ex02, the UC tutorial |
+| `ssm.shaded_band` | Shades credible bands in figures | ex01, ex03, ex04, ex07-ex09, the MIDAS tutorial |
+| `ssm.inefficiency_factor` | Computes the inefficiency factor of MCMC draws, the number of draws that carry the information of one independent draw | the Gibbs sampling and integrated likelihood guides, the UC tutorial |
 | `ssm.mcse` | Computes the Monte Carlo standard error of a posterior mean estimated from MCMC draws | the Gibbs sampling and integrated likelihood guides |
 | `ssm.geweke` | Computes the convergence diagnostic of Geweke (1992), which compares the means of an early and a late segment of a chain | not yet in an example |
 | `ssm.specvar0` | Estimates the long-run variance of the mean of MCMC draws, for the three diagnostics above | through the diagnostics |
