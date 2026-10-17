@@ -157,12 +157,11 @@ if strcmp(name, 'AR(2)')
     f = ar_nowcast(r.y(o), [ones(numel(o),1) r.X0(o,2) r.y2(o)], [1 r.X0(iq,2) r.y2(iq)], nsim, burnin);
 else
     fl = flags(name);
-    J = numel(r.W);
-    xT = struct('x0', r.X0(iq,:), 'w', {cellfun(@(w) w(iq,:), r.W, 'UniformOutput', false)}, ...
-        'a', {cellfun(@(a) a(iq,:), r.A, 'UniformOutput', false)});
-    f = midas_sampler(r.y(o), r.X0(o,:), cellfun(@(w) w(o,:), r.W, 'UniformOutput', false), ...
-        cellfun(@(a) a(o,:), r.A, 'UniformOutput', false), xT, ...
-        struct('tvb', fl(1) == 1, 'tvtheta', fl(2) == 1 && J > 0, 'sv', fl(3) == 1), nsim, burnin);
+    J = numel(r.W);                            % row iq of X, W and A is the quarter to nowcast
+    fr = ssm.models.tvp_midas(r.y(o), r.X0(1:iq,:), cellfun(@(w) w(1:iq,:), r.W, 'UniformOutput', false), ...
+        cellfun(@(a) a(1:iq,:), r.A, 'UniformOutput', false), 'tvb', fl(1) == 1, ...
+        'tvtheta', fl(2) == 1 && J > 0, 'sv', fl(3) == 1, 'nsim', nsim, 'burnin', burnin);
+    f = struct('m', fr.nowcast.m, 'v', fr.nowcast.v);
 end
 end
 

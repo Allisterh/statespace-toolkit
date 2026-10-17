@@ -2,8 +2,9 @@
 %
 % Nowcasts of US real GDP growth for 1990Q1-2019Q4, made at the end of each month of the
 % quarter (h = 2/3, 1/3 and 0), from an AR(2) and five MIDAS regressions of Chan, Poon
-% and Zhu (2026): MIDAS, MIDAS-SV, TVP-MIDAS-SV, and TVP-MIDAS-SV-R1 and -R2, in which
-% only the coefficients or only the weights vary over time. The predictors are monthly
+% and Zhu (2026), estimated by ssm.models.tvp_midas: MIDAS, MIDAS-SV, TVP-MIDAS-SV, and
+% TVP-MIDAS-SV-R1 and -R2, in which only the coefficients or only the weights vary over
+% time. The predictors are monthly
 % industrial production, the weekly NFCI and the daily 10-year minus 3-month spread.
 % Every model is re-estimated at every origin on today's data with the release lags of
 % the paper's Table 2 (pseudo real time). Part 0 checks the data. Part 1 checks
@@ -90,19 +91,17 @@ end
 gtrue = log(2) + [0; cumsum(sqrt(sig2g)*randn(n-1,1))];
 yg = sum(X0.*Btrue(:,1:5), 2) + Btrue(:,6).*sum(Thtrue{1}.*W{1}, 2) ...
     + Btrue(:,7).*sum(Thtrue{2}.*W{2}, 2) + exp(gtrue/2).*randn(n,1);
-xT = struct('x0', r.X0(n+1,:), 'w', {{r.W{1}(n+1,:), r.W{2}(n+1,:)}}, ...
-    'a', {{r.A{1}(n+1,:), r.A{2}(n+1,:)}});
 t1 = tic;
-fg = midas_sampler(yg, X0, W, A, xT, struct('tvb', true, 'tvtheta', true, 'sv', true, ...
-    'thin', 10), nsim, burnin);
+fg = ssm.models.tvp_midas(yg, r.X0(1:n+1,:), {r.W{1}(1:n+1,:), r.W{2}(1:n+1,:)}, ...
+    {r.A{1}(1:n+1,:), r.A{2}(1:n+1,:)}, 'nsim', nsim, 'burnin', burnin, 'thin', 10);
 fprintf('%d quarters, %d draws after %d, %.1f s; largest restriction residual %.1e\n', n, ...
-    nsim, burnin, toc(t1), fg.res);
+    nsim, burnin, toc(t1), fg.max_resid);
 fprintf('%-26s %9s %9s %9s\n', 'paths', 'RMSE', 'post sd', 'coverage');
 cvg = zeros(1,3);
-cvg(1) = report('coefficients b_t', fg.B, Btrue);
-cvg(2) = report('NFCI weights theta_t', fg.Th{1}, Thtrue{1});
-cvg(3) = report('spread weights theta_t', fg.Th{2}, Thtrue{2});
-assert(all(cvg > .75) && fg.res < 1e-8, 'build: the sampler does not recover the generated paths');
+cvg(1) = report('coefficients b_t', fg.draws.b, Btrue);
+cvg(2) = report('NFCI weights theta_t', fg.draws.theta{1}, Thtrue{1});
+cvg(3) = report('spread weights theta_t', fg.draws.theta{2}, Thtrue{2});
+assert(all(cvg > .75) && fg.max_resid < 1e-8, 'build: the sampler does not recover the generated paths');
 
 %% Part 2: the nowcasts
 fprintf('\n=== Part 2: nowcasts ===\n');
@@ -286,11 +285,11 @@ if k == 1
     f = ar_nowcast(rr.y(o), [ones(numel(o),1) rr.X0(o,2) rr.y2(o)], ...
         [1 rr.X0(iq,2) rr.y2(iq)], nsim, burnin);
     f.res = 0;
-else
-    xT = struct('x0', rr.X0(iq,:), 'w', {{rr.W{1}(iq,:), rr.W{2}(iq,:)}}, ...
-        'a', {{rr.A{1}(iq,:), rr.A{2}(iq,:)}});
-    f = midas_sampler(rr.y(o), rr.X0(o,:), {rr.W{1}(o,:), rr.W{2}(o,:)}, ...
-        {rr.A{1}(o,:), rr.A{2}(o,:)}, xT, models(k), nsim, burnin);
+else                                            % row iq of X, W and A is the target
+    fr = ssm.models.tvp_midas(rr.y(o), rr.X0(1:iq,:), {rr.W{1}(1:iq,:), rr.W{2}(1:iq,:)}, ...
+        {rr.A{1}(1:iq,:), rr.A{2}(1:iq,:)}, 'tvb', models(k).tvb, 'tvtheta', models(k).tvtheta, ...
+        'sv', models(k).sv, 'nsim', nsim, 'burnin', burnin);
+    f = struct('m', fr.nowcast.m, 'v', fr.nowcast.v, 'res', fr.max_resid);
 end
 y = rr.y(iq);
 l = -.5*log(2*pi*f.v) - .5*(y - f.m).^2./f.v;

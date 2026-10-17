@@ -1,7 +1,8 @@
 # Which Parameters of a GDP Nowcasting Model Should Vary over Time?
 
-*Code: [`build.m`](build.m) and [`your_data.m`](your_data.m), with the samplers in
-[`core/+ssm`](../../core/+ssm/). Method:
+*Code: [`build.m`](build.m) and [`your_data.m`](your_data.m), which call
+[`ssm.models.tvp_midas`](../../core/+ssm/+models/tvp_midas.m) and
+[`ssm.midas_basis`](../../core/+ssm/midas_basis.m). Method:
 [Chan, Poon and Zhu (2026)](../../CITING.md#chan-poon-and-zhu-2026),
 [Ghysels, Sinko and Valkanov (2007)](../../CITING.md#ghysels-sinko-and-valkanov-2007),
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009),
@@ -100,6 +101,55 @@ $`\mathcal{IG}(\nu, S)`$ has density proportional to $`x^{-(\nu+1)}\mathrm{e}^{-
 the constant variance follows $`\mathcal{IG}(5, 16)`$, with mean 4. We give the AR(2) the priors
 of the constant-parameter MIDAS regressions.
 
+## The Function Call
+
+Each model is one call to [`ssm.models.tvp_midas`](../../core/+ssm/+models/tvp_midas.m). Before
+it, [`ssm.midas_basis`](../../core/+ssm/midas_basis.m) turns the observations of each weekly or
+daily predictor into $`\mathbf{w}_{jt}`$ and $`\mathbf{a}_{jt}`$. For TVP-MIDAS-SV-R1 at one
+origin:
+
+```matlab
+for j = 1:2                                    % the NFCI and the spread
+    [W{j}, A{j}] = ssm.midas_basis(d{j}, x{j}, wstart, wend);
+end
+res = ssm.models.tvp_midas(y, X, W, A, 'tvb', true, 'tvtheta', false, 'sv', true, ...
+    'nsim', 10000, 'burnin', 5000);
+res.nowcast.mean                               % the point nowcast
+res.nowcast.q                                  % its 5, 10, 50, 90 and 95 percent quantiles
+```
+
+| Argument | Sets | In this tutorial |
+|---|---|---|
+| `d{j}`, `x{j}` | the dates and values of the observations $`x_{jtk}`$ | the weekly NFCI and the daily spread |
+| `wstart`, `wend` | the window of each quarter, which starts after `wstart`, ends at `wend` and fixes $`s_{jtk}`$ | the three months ending at the origin |
+| `y` | $`y_t`$ for the quarters before the target | GDP growth from 1982Q2 |
+| `X` | $`(1, y_{t-1}, z_{1t}, z_{2t}, z_{3t})`$, with a last row for the target quarter | the intercept, last quarter's growth and three months of industrial production |
+| `W{j}`, `A{j}` | $`\mathbf{w}_{jt}`$ and $`\mathbf{a}_{jt}`$, with a last row for the target quarter | from `ssm.midas_basis` |
+| `'tvb'` | random walks for $`\alpha_t`$, $`\rho_t`$, $`\boldsymbol{\gamma}_t`$ and $`\boldsymbol{\beta}_t`$ | true in TVP-MIDAS-SV and TVP-MIDAS-SV-R1 |
+| `'tvtheta'` | random walks for $`\boldsymbol{\theta}_{jt}`$ | true in TVP-MIDAS-SV and TVP-MIDAS-SV-R2 |
+| `'sv'` | a random walk for $`g_t`$ | true in all but MIDAS |
+| `'prior'` | the priors above | the defaults, which are the paper's |
+| `'nsim'`, `'burnin'` | the draws kept and the draws discarded first | 10,000 and 5,000, the paper's chain length |
+
+Each sweep of the sampler takes four steps:
+
+1. The coefficients, given the weights, by
+   [`ssm.simulate_states`](../../core/+ssm/simulate_states.m), the precision sampler of Chan and
+   Jeliazkov (2009).
+2. The weights of each predictor, given the coefficients, by `ssm.simulate_states` followed by
+   [`ssm.restrict`](../../core/+ssm/restrict.m), which conditions the draw on the restrictions
+   (Algorithm 2.6 of Rue and Held, 2005).
+3. The log-volatility, by [`ssm.ksc_rw_diffuse`](../../core/+ssm/ksc_rw_diffuse.m), the
+   auxiliary mixture sampler of Kim, Shephard and Chib (1998).
+4. The variances of the random walks, and the error variance in the models with constant
+   volatility.
+
+For the target quarter, each draw moves the time-varying coefficients, weights and log-volatility
+one quarter on along their random walks. The weights are then projected onto the target quarter's
+restriction. Given these draws, the nowcast is normal. The predictive density is the average of
+these normal densities over the draws, the point nowcast the average of their means, and the
+quantiles those of the mixture.
+
 ## Results for US GDP
 
 The data are [`examples/data/USGDP.csv`](../../examples/data/USGDP.csv) for real GDP,
@@ -174,7 +224,7 @@ available at its origin. The nowcast misses the fall of 2008Q4, -8.9 percent aga
 0.6, and catches that of 2009Q1, -4.6 against -6.7. Of the 120 outcomes, 14 fall outside the
 interval.*
 
-## How the Nowcasts Are Computed
+## The Information at Each Origin
 
 The information at each origin follows Table 2 of Chan, Poon and Zhu (2026). At the end of month
 $`i`$ of a quarter, the NFCI and the spread are known up to that day and GDP up to the previous
@@ -183,19 +233,6 @@ Each origin has its own regression, and every quarter of its sample is aligned t
 the same way. The three monthly regressors are the three months before the origin's month. The
 weekly and daily observations are those of the three months ending at the origin. A weekly window
 holds 12 to 14 observations and a daily window 59 to 65.
-
-At each origin each model is estimated by Markov chain Monte Carlo: 10,000 draws after a burn-in
-of 5,000, the paper's chain length. The coefficients are drawn by
-[`ssm.simulate_states`](../../core/+ssm/simulate_states.m), the precision sampler of Chan and
-Jeliazkov (2009). The weights are drawn by `ssm.simulate_states` followed by
-[`ssm.restrict`](../../core/+ssm/restrict.m), which conditions the draw on the restrictions
-(Algorithm 2.6 of Rue and Held, 2005). The log-volatility is drawn by
-[`ssm.ksc_rw_diffuse`](../../core/+ssm/ksc_rw_diffuse.m), the auxiliary mixture sampler of Kim,
-Shephard and Chib (1998). For the target quarter, each draw moves the time-varying coefficients,
-weights and log-volatility one quarter on along their random walks. The weights are then projected
-onto the target quarter's restriction. Given these draws, the nowcast is normal. The predictive
-density is the average of these normal densities over the draws, the point nowcast the average of
-their means, and the quantiles those of the mixture.
 
 ## Checking the Sampler
 
@@ -207,6 +244,22 @@ regressors of the US data. The 90 percent bands of the 150 quarters contain 88.5
 true coefficients, 93.2 percent of the true NFCI weights and 89.3 percent of the true spread
 weights. The restrictions hold in every draw to 4e-14. Over every draw of the 1,920 nowcasts, the
 largest restriction residual is 3.0e-11.
+
+## What Can Go Wrong
+
+- **Data released after the origin.** A nowcast may use only the data published by its origin. If
+  `mlag` is shorter than the publication lag of a monthly predictor, or a window ends after the
+  origin, the nowcasts use data that a forecaster at the origin did not have. The build checks the
+  information sets of 2000Q1 against Table 2 of the paper before it runs the nowcasts.
+- **Revised data.** The data files hold today's revised series, so the nowcasts are pseudo real
+  time. Chan, Poon and Zhu (2026) score their nowcasts on real-time vintages, and scores on
+  revised data can differ.
+- **The prior on the variances of the weights.** The variances of the weights' random walks have
+  the prior $`\mathcal{IG}(10, 0.001)`$, which keeps the movements of the weights small. The
+  finding that time-varying weights add little holds under this prior.
+- **A window without observations.** `ssm.midas_basis` stops with an error when a weekly or daily
+  window holds no observation, as for a predictor that starts after the first quarter of the
+  sample. Start the sample later, or leave the predictor out.
 
 ## Applying the Method to Your Data
 

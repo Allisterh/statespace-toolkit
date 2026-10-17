@@ -117,6 +117,7 @@ sampler from them.
 | `ssm.diffmat` | Builds the first-difference matrix of a state equation, I - aL | ex01-ex03, ex06, ex07, ex09, ex10, both tutorials |
 | `ssm.lagpolymat` | Builds the matrix of a lag polynomial, such as second differences or an AR(2) | ex04 |
 | `ssm.surform` | Builds the design matrix of a regression whose coefficients vary over time | ex03, ex09, ex10, both tutorials |
+| `ssm.midas_basis` | Builds the regressors and restriction rows of a high-frequency predictor in a MIDAS regression with a Fourier weighting function, over the window of each period | the MIDAS tutorial |
 | `ssm.mode_newton` | Finds the mode of a concave log density by Newton-Raphson, with a banded Hessian | ex08, and through `ssm.armh` |
 | `ssm.armh` | Takes the accept-reject Metropolis-Hastings step of Chan (2017), for states whose conditional distribution is not Gaussian | ex09 |
 | `ssm.ksc_rw_h0` | Draws the log-volatility path of a random walk by the auxiliary mixture sampler of Kim, Shephard and Chib (1998) | ex07, ex10, the UC tutorial |
@@ -139,6 +140,11 @@ bvar-toolkit original.
 `bvar.util.select_obs` in bvar-toolkit copies `ssm.select_obs`, apart from its error identifier. The
 Econometrics Toolbox has a class named `ssm`: calls such as `ssm.simulate_states` resolve to this
 package, and `ssm(...)` still constructs the toolbox's state space object.
+
+The subpackage `ssm.models` holds complete samplers built from these steps, each estimated in one
+call. [`ssm.models.tvp_midas`](core/+ssm/+models/tvp_midas.m) estimates the MIDAS regressions of
+Chan, Poon and Zhu (2026), whose coefficients, weights and volatility can each vary over time, and
+nowcasts the next period. The MIDAS tutorial calls it.
 
 ## Verification
 
@@ -164,6 +170,9 @@ it, `intlike_UC0.m` and `intlike_tvpvar.m`. `ssm.diffmat` and `ssm.lagpolymat` a
 scripts write out, and `ssm.select_obs` against the worked illustrations of Chan, Poon and Zhu
 (2023). `ssm.restrict` must equal, bit for bit, the update that ex05 and ex10 wrote out before
 it existed, and its conditional mean and covariance must equal those from dense algebra.
+`ssm.models.tvp_midas` must reproduce, draw for draw, the sampler with which the MIDAS tutorial's
+results were computed, kept in `tests/unit/private/`, in each of the tutorial's five models, and
+`ssm.midas_basis` must equal, bit for bit, the loop it replaced in that tutorial.
 
 Files from other repositories that the tests run are held verbatim in
 [`tests/fixtures/`](tests/fixtures/), with their md5s. On every push to `main` and every pull
