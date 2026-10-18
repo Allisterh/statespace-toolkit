@@ -18,8 +18,11 @@ switch name
     case 'AR4'
         f = ar_model(y(1:t), 4, fc.nsim, fc.burnin);
     otherwise
-        out = uc_sampler(y(1:t), uc_model(name), fc.nsim, fc.burnin, fc.nsim);
-        f = uc_forecast(uc_model(name), out);
+        o = uc_options(name);
+        res = ssm.models.uc(y(1:t), o{:}, 'nsim', fc.nsim, 'burnin', fc.burnin, 'horizon', 4, ...
+            'quantiles', []);
+        f = struct('m1', res.forecast.m(:,1), 'v1', res.forecast.v(:,1), ...
+            'm4', res.forecast.mavg, 'v4', res.forecast.vavg);
 end
 r = nan(1, 6);
 r(1) = mean(f.m1);

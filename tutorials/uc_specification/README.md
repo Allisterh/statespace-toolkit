@@ -1,7 +1,8 @@
 # Which Unobserved Components Model Should I Use for Inflation?
 
-*Code: [`build.m`](build.m) and [`your_data.m`](your_data.m), with the samplers in
-[`core/+ssm`](../../core/+ssm/). Method:
+*Code: [`build.m`](build.m) and [`your_data.m`](your_data.m), which call
+[`ssm.models.uc`](../../core/+ssm/+models/uc.m) and
+[`ssm.models.uc_forecast`](../../core/+ssm/+models/uc_forecast.m). Method:
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009),
 [Kim, Shephard and Chib (1998)](../../CITING.md#kim-shephard-and-chib-1998),
 [Chan (2013)](../../CITING.md#chan-2013),
@@ -128,6 +129,44 @@ $`\mathcal{N}(0, 5)`$, its AR coefficient is $`\mathcal{N}(0.9, 1)`$ on $`(-1, 1
 $`\psi \sim \mathcal{N}(0, 1)`$ on $`(-1, 1)`$. The priors of CCK's expectation equation are those
 of the paper's forecasting code.
 
+## The Function Call
+
+UC, UC-SVgap, UCSV and UC-MA are each one call to
+[`ssm.models.uc`](../../core/+ssm/+models/uc.m). For UC-SVgap at one origin:
+
+```matlab
+res = ssm.models.uc(y, 'gap', 'rw', 'trend', 'const', 'nsim', 20000, 'burnin', 5000, ...
+    'horizon', 4);
+res.forecast.avg_mean                % the forecast of average inflation over the next year
+res.forecast.avg_q                   % its 5, 10, 50, 90 and 95 percent quantiles
+```
+
+| Argument | Sets | In this tutorial |
+|---|---|---|
+| `y` | $`y_t`$ up to the forecast origin | quarterly CPI inflation from 1948Q1 |
+| `'gap'` | the log variance $`h_t`$ of the gap: `'const'`, `'rw'` or `'ar1'` | `'const'` in UC, `'rw'` in UC-SVgap and UCSV, `'ar1'` in UC-MA |
+| `'trend'` | the log variance $`g_t`$ of the trend innovations, with the same choices | `'rw'` in UCSV, `'const'` in the others |
+| `'ma'` | the term $`\psi u_{t-1}`$ of the gap | true in UC-MA |
+| `'prior'` | the priors above | the defaults |
+| `'nsim'`, `'burnin'` | the draws kept and the draws discarded first | 20,000 and 5,000 at each origin |
+| `'horizon'` | the number of quarters forecast, and so the length of the average | 4 |
+
+Each sweep of the sampler takes four steps:
+
+1. The trend, in one block, by [`ssm.simulate_states`](../../core/+ssm/simulate_states.m), the
+   precision sampler of Chan and Jeliazkov (2009). In UC-MA the draw works on the series
+   transformed so that the errors of the gap are independent.
+2. Each log variance and its parameters: a constant variance from its inverse-gamma conditional,
+   a random walk by [`ssm.ksc_rw_h0`](../../core/+ssm/ksc_rw_h0.m) and a stationary AR(1) by
+   [`ssm.ksc_ar1_mean`](../../core/+ssm/ksc_ar1_mean.m), the auxiliary mixture samplers of Kim,
+   Shephard and Chib (1998).
+3. In UCSV, the level $`\tau_0`$ from which the trend starts.
+4. In UC-MA, $`\psi`$, by an independence Metropolis-Hastings step at the mode of its conditional
+   density.
+
+[`ssm.models.uc_forecast`](../../core/+ssm/+models/uc_forecast.m) then gives, at each draw, the
+normal densities of inflation in each of the next four quarters and of their average.
+
 ## Results for US CPI Inflation
 
 The data are [`examples/data/USCPI_quarterly.csv`](../../examples/data/USCPI_quarterly.csv), 400
@@ -201,13 +240,11 @@ to 2020 and loses part of the gain on the forecasts that cover 2021 and 2022; UC
 ## How the Forecasts Are Computed
 
 At each origin each model is estimated by Markov chain Monte Carlo on the data up to that quarter:
-20,000 draws after a burn-in of 5,000, and 10,000 after 1,000 for CCK. UC, UC-SVgap, UCSV, UC-MA
-and CCK are drawn by Gibbs samplers built with
-[`ssm.simulate_states`](../../core/+ssm/simulate_states.m) for the trend and the auxiliary mixture
-sampler of Kim, Shephard and Chib (1998) for the log-volatilities
-([`ssm.ksc_rw_h0`](../../core/+ssm/ksc_rw_h0.m),
-[`ssm.ksc_ar1_mean`](../../core/+ssm/ksc_ar1_mean.m) and
-[`ssm.ksc_rw_diffuse`](../../core/+ssm/ksc_rw_diffuse.m)). AR-trend-bound runs the
+20,000 draws after a burn-in of 5,000, and 10,000 after 1,000 for CCK. UC, UC-SVgap, UCSV and
+UC-MA are drawn by `ssm.models.uc`. CCK is drawn by a Gibbs sampler of this tutorial, built with
+[`ssm.simulate_states`](../../core/+ssm/simulate_states.m) for the trend and
+[`ssm.ksc_rw_diffuse`](../../core/+ssm/ksc_rw_diffuse.m), the auxiliary mixture sampler of Kim,
+Shephard and Chib (1998), for the log-volatilities. AR-trend-bound runs the
 [archived sampler](../../replications/chan_koop_potter2013_jbes_trendbound/) of Chan, Koop and
 Potter (2013), which draws $`\tau_t`$, $`\rho_t`$ and $`h_t`$ by
 accept-reject Metropolis-Hastings steps.
@@ -241,6 +278,18 @@ of 100 lags, run from 1.9 to 82; the highest belong to UCSV. The Metropolis-Hast
 often: 97 percent for $`\psi`$ in UC-MA and 98 percent in CCK, 76 percent for the AR coefficient
 of the log-volatility in UC-MA, 94 percent for the blocks of $`b_t`$ in CCK, and 81, 62 and 80
 percent for the trend, $`\rho_t`$ and $`h_t`$ in the archived sampler of AR-trend-bound.
+
+## What Can Go Wrong
+
+- **A trend that moves with each quarter's inflation.** Each model's forecast stays close to its
+  estimate of the current trend, so a trend that follows inflation closely makes the forecast move
+  with it. From one origin to the next, the forecast of UC changes by 0.69 on average and that of
+  CCK by 0.20 (Table 1).
+- **The priors of the variances.** The comparisons hold under the priors used here. The constant
+  variance of the trend innovations, for example, has the prior $`\mathcal{IG}(10, 0.18)`$, with
+  mean 0.02, and it affects how closely the trend follows inflation.
+- **The bounds of AR-trend-bound.** The trend of AR-trend-bound stays between 0 and 5 percent, the
+  bounds of the archived code. For a series whose trend may leave this range, leave the model out.
 
 ## Applying the Method to Your Data
 

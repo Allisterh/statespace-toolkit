@@ -18,6 +18,7 @@ To credit the software as well, cite the toolkit record at the end.
 | Stochastic volatility in a noncentered parameterization, and tests of whether a model needs its time variation or its stochastic volatility | `ssm.ksc_rw_noncentered`; `replications/chan2018_er_spectest` | [Chan (2018)](#chan-2018) |
 | The accept-reject Metropolis-Hastings step for states whose conditional distribution is not Gaussian; stochastic volatility in mean | `ssm.armh`; ex09; `replications/chan2017_jbes_svm` | [Chan (2017)](#chan-2017) |
 | Stochastic volatility with MA(1) and Student-t errors | ex08; `replications/chan_hsiao2014_wiley_sv`, `replications/chan2013_joe_masv` | [Chan and Hsiao (2014)](#chan-and-hsiao-2014); [Chan (2013)](#chan-2013) for moving average stochastic volatility |
+| Unobserved components models of trend inflation: a random-walk trend and a gap, with constant variances or stochastic volatility, and an MA(1) gap | `ssm.models.uc`, `ssm.models.uc_forecast`; the UC tutorial | [Stock and Watson (2007)](#stock-and-watson-2007) for UCSV; [Chan (2013)](#chan-2013) for the MA(1) gap with stochastic volatility |
 | Time-varying parameter MIDAS | `ssm.models.tvp_midas`, `ssm.midas_basis`; ex10; the MIDAS nowcasting tutorial | [Chan, Poon and Zhu (2026)](#chan-poon-and-zhu-2026); [Ghysels, Sinko and Valkanov (2007)](#ghysels-sinko-and-valkanov-2007) for MIDAS regressions |
 | The output gap from an unobserved components model, and the Hodrick-Prescott filter as one | ex04; `replications/grant_chan2017_jedc_hpfilter` | [Grant and Chan (2017b)](#grant-and-chan-2017b); [Morley, Nelson and Zivot (2003)](#morley-nelson-and-zivot-2003) for the AR(2) cycle; [Ritter and Tanner (1992)](#ritter-and-tanner-1992) for the Griddy-Gibbs step |
 | Trend-cycle decompositions of output compared by marginal likelihood | `replications/grant_chan2017_jmcb_trendcycle` | [Grant and Chan (2017a)](#grant-and-chan-2017a) |
@@ -737,6 +738,29 @@ Algorithm 2.6 conditions a Gaussian draw on linear equality restrictions, the up
   address   = {Boca Raton},
   year      = {2005},
   doi       = {10.1201/9780203492024}
+}
+```
+
+### Stock and Watson (2007)
+
+Stock, J. H. and Watson, M. W. (2007). Why Has U.S. Inflation Become Harder to Forecast?
+*Journal of Money, Credit and Banking* 39(s1): 3-33.
+[Journal version](https://doi.org/10.1111/j.1538-4616.2007.00014.x)
+
+The unobserved components model with stochastic volatility, UCSV, in which the variances of
+both the trend and the gap change over time. `ssm.models.uc` estimates it, and the UC tutorial
+compares it with other trend models.
+
+```bibtex
+@article{SW07,
+  author  = {Stock, J. H. and Watson, M. W.},
+  title   = {Why Has {U.S.} Inflation Become Harder to Forecast?},
+  journal = {Journal of Money, Credit and Banking},
+  year    = {2007},
+  volume  = {39},
+  number  = {s1},
+  pages   = {3--33},
+  doi     = {10.1111/j.1538-4616.2007.00014.x}
 }
 ```
 

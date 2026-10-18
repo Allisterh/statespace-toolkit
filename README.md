@@ -144,7 +144,11 @@ package, and `ssm(...)` still constructs the toolbox's state space object.
 The subpackage `ssm.models` holds complete samplers built from these steps, each estimated in one
 call. [`ssm.models.tvp_midas`](core/+ssm/+models/tvp_midas.m) estimates the MIDAS regressions of
 Chan, Poon and Zhu (2026), whose coefficients, weights and volatility can each vary over time, and
-nowcasts the next period. The MIDAS tutorial calls it.
+nowcasts the next period. The MIDAS tutorial calls it. [`ssm.models.uc`](core/+ssm/+models/uc.m)
+estimates unobserved components models, among them UCSV. Each has a random-walk trend and a gap.
+The variances of the trend innovations and of the gap can each be constant or time-varying, and
+the gap can have MA(1) errors. [`ssm.models.uc_forecast`](core/+ssm/+models/uc_forecast.m)
+forecasts with these models. The UC tutorial calls both.
 
 ## Verification
 
@@ -173,6 +177,10 @@ it existed, and its conditional mean and covariance must equal those from dense 
 `ssm.models.tvp_midas` must reproduce, draw for draw, the sampler with which the MIDAS tutorial's
 results were computed, kept in `tests/unit/private/`, in each of the tutorial's five models, and
 `ssm.midas_basis` must equal, bit for bit, the loop it replaced in that tutorial.
+`ssm.models.uc` and `ssm.models.uc_forecast` must reproduce, draw for draw, the code with which
+the UC tutorial's results were computed, in each of its four models. That code is also kept in
+`tests/unit/private/`. Their forecasts at every horizon must match paths simulated forward from
+the same draws.
 
 Files from other repositories that the tests run are held verbatim in
 [`tests/fixtures/`](tests/fixtures/), with their md5s. On every push to `main` and every pull

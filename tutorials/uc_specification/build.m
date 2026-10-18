@@ -3,7 +3,8 @@
 % Seven models of quarterly US CPI inflation, 1948Q1-2025Q3
 % (examples/data/USCPI_quarterly.csv), with common priors for the parameters the
 % unobserved components models share: an AR(4) benchmark; UC, UC-SVgap (UC with stochastic
-% volatility in the gap), UCSV and UC-MA; the bounded trend model of Chan, Koop and Potter
+% volatility in the gap), UCSV and UC-MA, estimated by ssm.models.uc and forecast by
+% ssm.models.uc_forecast; the bounded trend model of Chan, Koop and Potter
 % (2013); and M1 of Chan, Clark and Koop (2018), which adds the SPF 10-year CPI
 % expectation from 1991Q4 (examples/data/USCPI10_SPF.csv). Each model is re-estimated on
 % the data up to each origin, 1999Q4 to 2024Q3, and its forecast of the average inflation
@@ -30,8 +31,8 @@ seed = 20260922;
 names = {'UC', 'UC-MA', 'UCSV', 'ARbound', 'CCK', 'AR4', 'UC-SVgap'};
 labels = {'UC', 'UC-MA', 'UCSV', 'AR-trend-bound', 'CCK', 'AR(4)', 'UC-SVgap'};
 order = [6 1 7 3 2 4 5];                        % the order of the table
-isuc = [1 2 3 7];                               % the models of uc_sampler
-nsim = 50000; burnin = 5000; thin = 10;         % whole sample, the models of uc_sampler
+isuc = [1 2 3 7];                               % the models of ssm.models.uc
+nsim = 50000; burnin = 5000; thin = 10;         % whole sample, the models of ssm.models.uc
 ckp = struct('nloop', 35000, 'burnin', 5000);   % whole sample, the archived run length
 fc = repmat({struct('nsim', 20000, 'burnin', 5000)}, 1, 7);   % each origin
 fc{5} = struct('nsim', 10000, 'burnin', 1000);  % CCK
@@ -69,8 +70,9 @@ bK = y(1:n)/s2(1) + P*(5*ones(n,1));
 rng(seed, 'twister');
 tauT = zeros(M, 1);
 for i = 1:M, s = ssm.simulate_states(K, bK); tauT(i) = s(n); end
-out = struct('phi', repmat(log(s2), M, 1), 'last', [tauT repmat(log(s2), M, 1) zeros(M,1)]);
-f = uc_forecast(uc_model('UC'), out);
+out = struct('spec', struct('gap', struct('type', 'const'), 'trend', struct('type', 'const'), 'ma', 0), ...
+    'params', repmat(log(s2), M, 1), 'last', [tauT repmat(log(s2), M, 1) zeros(M,1)]);
+f = four_quarter(out);
 lw = lnpdf(y(T), f.m1, f.v1);
 se = std(exp(lw - max(lw)))/mean(exp(lw - max(lw)))/sqrt(M);
 Hn = ssm.diffmat(T);
@@ -89,9 +91,9 @@ for k = 1:7
     rng(seed + k, 'twister');
     switch k
         case {1, 2, 3, 7}
-            m = uc_model(names{k});
-            out = uc_sampler(y, m, 2000, 1000, 10);
-            fk = @() uc_forecast(m, out); sk = @() sim_uc(m, out);
+            o = uc_options(names{k});
+            out = ssm.models.uc(y, o{:}, 'nsim', 2000, 'burnin', 1000, 'horizon', 0);
+            fk = @() four_quarter(out); sk = @() sim_uc(out);
         case 4
             out = ckp_run(repo, y, 3000, 1000, Inf, seed + k);
             fk = @() ckp_forecast(out, y(T)); sk = @() sim_ckp(out, y(T));
@@ -123,9 +125,9 @@ rdir = fullfile(tdir, 'runs');
 if ~exist(rdir, 'dir'), mkdir(rdir); end
 ch = cell(1, 7);
 for k = isuc
-    m = uc_model(names{k});
+    o = uc_options(names{k});
     ch{k} = cached(fullfile(rdir, [strrep(names{k}, '-', '_') '_chain.mat']), [nsim burnin thin seed + k ver(k)], ...
-        @() run_chain(y, m, nsim, burnin, thin, seed + k));
+        @() run_chain(y, o, nsim, burnin, thin, seed + k));
     fprintf('%-14s %d draws after %d burn-in\n', labels{k}, nsim, burnin);
 end
 % UC-MA forecasts from u_T: it must be the error of the stored tau under the stored psi
@@ -252,9 +254,18 @@ r = fun();
 save(file, 'key', 'r', '-v7.3');
 end
 
-function r = run_chain(y, m, nsim, burnin, thin, sd)
+function r = run_chain(y, o, nsim, burnin, thin, sd)
+% one whole-sample chain of ssm.models.uc, in the fields the build reads
 rng(sd, 'twister');
-r = uc_sampler(y, m, nsim, burnin, thin);
+res = ssm.models.uc(y, o{:}, 'nsim', nsim, 'burnin', burnin, 'thin', thin, 'horizon', 0);
+r = struct('phi', res.params, 'tau', res.draws.tau, 'sdh', res.draws.sdh, 'sdg', res.draws.sdg, ...
+    'last', res.last, 'acc', res.acc);
+end
+
+function f = four_quarter(res)
+% the predictive densities of y_{T+1} and of the average of y_{T+1}, ..., y_{T+4}
+fc = ssm.models.uc_forecast(res, 4);
+f = struct('m1', fc.m(:,1), 'v1', fc.v(:,1), 'm4', fc.mavg, 'v4', fc.vavg);
 end
 
 function r = run_cck(pi, pi0, z, nsim, burnin, sd)
@@ -262,10 +273,10 @@ rng(sd, 'twister');
 r = cck_sampler(pi, pi0, z, nsim, burnin);
 end
 
-function s = sim_uc(m, out)
-% one path of y_{T+1}, ..., y_{T+4} per posterior draw of uc_sampler, by forward
+function s = sim_uc(out)
+% one path of y_{T+1}, ..., y_{T+4} per posterior draw of ssm.models.uc, by forward
 % simulation of every state; returns y_{T+1} and the four-quarter average
-n = size(out.phi, 1); ph = out.phi; j = 0;
+n = size(out.params, 1); ph = out.params; j = 0; m = out.spec;
 x = cell(1, 2); xT = {out.last(:,2), out.last(:,3)}; c = {'gap', 'trend'};
 for i = 1:2
     k = m.(c{i}); x{i} = zeros(n, 4); prev = xT{i};
