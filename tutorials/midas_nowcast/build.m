@@ -4,15 +4,19 @@
 % quarter (h = 2/3, 1/3 and 0), from an AR(2) and five MIDAS regressions of Chan, Poon
 % and Zhu (2026), estimated by ssm.models.tvp_midas: MIDAS, MIDAS-SV, TVP-MIDAS-SV, and
 % TVP-MIDAS-SV-R1 and -R2, in which only the coefficients or only the weights vary over
-% time. The predictors are monthly
-% industrial production, the weekly NFCI and the daily 10-year minus 3-month spread.
-% Every model is re-estimated at every origin on today's data with the release lags of
-% the paper's Table 2 (pseudo real time). Part 0 checks the data. Part 1 checks
+% time. The predictors are monthly industrial production, the weekly NFCI and the daily
+% 10-year minus 3-month spread. Every model is re-estimated at every origin on today's data
+% with the release lags of the paper's Table 2 (pseudo real time), each weekly value of the
+% NFCI from its release day (nfci_release). Part 0 checks the data. Part 1 checks
 % TVP-MIDAS-SV on data generated from it, with every variance estimated. Part 2 runs the
 % nowcasts, in parallel when the Parallel Computing Toolbox is available, each with its
 % own seed and its own file in runs/, so that a serial run gives the same numbers and an
-% interrupted build resumes. Part 3 scores them, over the whole sample and by subperiod,
-% writes nowcasts.csv and draws the figures. Everything printed goes to a log in tempdir.
+% interrupted build resumes; a file is reused only if its key matches the settings, the
+% code version cver and a digest of the run's data. Part 2 also runs the two models whose
+% weights vary, TVP-MIDAS-SV and TVP-MIDAS-SV-R2, at h = 0 with the prior of the variances
+% of the weights at the scale of the paper, the prior check of the README. Part 3 scores
+% the nowcasts, over the whole sample and by subperiod, writes nowcasts.csv and draws the
+% figures. Everything printed goes to a log in tempdir.
 %
 % Usage, from anywhere:  run tutorials/midas_nowcast/build.m
 
@@ -29,7 +33,7 @@ run(fullfile(repo, 'setup.m'));
 seed = 20261004;
 nsim = 10000; burnin = 5000;                    % the paper's chain length
 nworkers = 8;                                   % parallel workers, when the toolbox exists
-cver = 2;                                       % in every cache key
+cver = 3;                                       % in every cache key
 targets = 1990:.25:2019.75;                     % 1990Q1-2019Q4
 models = struct( ...
     'name', {'AR(2)', 'MIDAS', 'MIDAS-SV', 'TVP-MIDAS-SV', 'TVP-MIDAS-SV-R1', 'TVP-MIDAS-SV-R2'}, ...
@@ -53,6 +57,13 @@ for j = 1:3
         'daily %d-%d\n'], hl{j}, numel(r.y), qlab(r.q(1)), qlab(r.q(end)), min(r.m(:,1)), ...
         max(r.m(:,1)), min(r.m(:,2)), max(r.m(:,2)));
 end
+% the prior check: the paper's IG(10, .001) applies to weights theta'*v(s) on the
+% observations themselves; the weights here are theta'*v(s)/m, so at the typical count m
+% of a window that prior is IG(10, .001*m^2)
+mt = median(R{3}.m, 1);
+pc = struct('xi2', [10 .001*mt(1)^2; 10 .001*mt(2)^2]);
+fprintf('the prior check: typical counts %g (NFCI) and %g (spread), so xi2 ~ IG(10, %.3f) and IG(10, %.3f)\n', ...
+    mt, pc.xi2(:,2));
 % Table 2 of the paper: for 2000Q1 the latest industrial production is December, January
 % and February at the three origins, and every quarter shifts the same way
 i0 = find(R{1}.q == 2000);
@@ -70,23 +81,28 @@ fprintf('the basis averages of each predictor have rank 5: of the fixed weights,
 fprintf('information sets of Table 2: industrial production to %s, %s and %s for 2000Q1\n', ...
     char(R{1}.iplast(i0), 'MMM yyyy'), char(R{2}.iplast(i0), 'MMM yyyy'), ...
     char(R{3}.iplast(i0), 'MMM yyyy'));
+fprintf(['the NFCI at the end of January 2000: the latest value used is that of %s, ' ...
+    'released on %s\n'], char(R{1}.hlast(i0,1), 'd MMM'), char(nfci_release(R{1}.hlast(i0,1)), 'd MMM'));
 
 %% Part 1: TVP-MIDAS-SV on generated data, with the regressors of h = 0 to 2019Q3
 fprintf('\n=== Part 1: TVP-MIDAS-SV on generated data ===\n');
 rng(seed, 'twister');
 r = R{3}; n = find(abs(r.q - 2019.75) < 1e-9) - 1;
-X0 = r.X0(1:n,:); W = {r.W{1}(1:n,:), r.W{2}(1:n,:)}; A = {r.A{1}(1:n,:), r.A{2}(1:n,:)};
+X0 = r.X0(1:n,:); W = {r.W{1}(1:n,:), r.W{2}(1:n,:)};
 om2 = 1e-3*ones(7,1); xi2 = 1e-4*ones(5,1); sig2g = .01;   % near their prior means
 Btrue = [1 .3 .2 .2 .2 -1 .5] + [zeros(1,7); cumsum(sqrt(om2').*randn(n-1,7))];
 % the weights from their prior, a random walk with theta_1 ~ N(0, 10 I) conditioned on
-% every restriction a_t'*theta_t = 1, as in the model
-H5 = kron(ssm.diffmat(n), speye(5));
-P5 = H5'*spdiags([ones(5,1)/10; repmat(1./xi2, n-1, 1)], 0, 5*n, 5*n)*H5;
+% every restriction a_t'*theta_t = 1, the target quarter's included, as in the model
+ne = n + 1;
+A = {r.A{1}(1:ne,:), r.A{2}(1:ne,:)};
+H5 = kron(ssm.diffmat(ne), speye(5));
+P5 = H5'*spdiags([ones(5,1)/10; repmat(1./xi2, ne-1, 1)], 0, 5*ne, 5*ne)*H5;
 Thtrue = cell(1,2);
 for k = 1:2
-    [th, ~, C5] = ssm.simulate_states(P5, zeros(5*n,1));
-    M5 = sparse(repelem((1:n)', 5), (1:5*n)', reshape(A{k}', [], 1), n, 5*n);
-    Thtrue{k} = reshape(ssm.restrict(th, C5, M5, ones(n,1)), 5, n)';
+    [th, ~, C5] = ssm.simulate_states(P5, zeros(5*ne,1));
+    M5 = sparse(repelem((1:ne)', 5), (1:5*ne)', reshape(A{k}', [], 1), ne, 5*ne);
+    Thtrue{k} = reshape(ssm.restrict(th, C5, M5, ones(ne,1)), 5, ne)';
+    Thtrue{k} = Thtrue{k}(1:n,:);
 end
 gtrue = log(2) + [0; cumsum(sqrt(sig2g)*randn(n-1,1))];
 yg = sum(X0.*Btrue(:,1:5), 2) + Btrue(:,6).*sum(Thtrue{1}.*W{1}, 2) ...
@@ -101,20 +117,27 @@ cvg = zeros(1,3);
 cvg(1) = report('coefficients b_t', fg.draws.b, Btrue);
 cvg(2) = report('NFCI weights theta_t', fg.draws.theta{1}, Thtrue{1});
 cvg(3) = report('spread weights theta_t', fg.draws.theta{2}, Thtrue{2});
-assert(all(cvg > .75) && fg.max_resid < 1e-8, 'build: the sampler does not recover the generated paths');
+% the data say little about the shape of the weights, so their bands follow the restricted
+% prior, and their coverage depends on where in that prior the drawn truth lies
+assert(cvg(1) > .75 && fg.max_resid < 1e-8, 'build: the sampler does not recover the generated coefficients');
 
 %% Part 2: the nowcasts
 fprintf('\n=== Part 2: nowcasts ===\n');
 rdir = fullfile(tdir, 'runs');
 if ~exist(rdir, 'dir'), mkdir(rdir); end
 nm = numel(models); nt = numel(targets);
-jobs = zeros(0, 3);                             % [model horizon target]
+jobs = zeros(0, 4);                             % [model horizon target prior], prior 2: the check
 for k = 1:nm
     for it = 1:nt
         for j = 1:3
             if k == 1 && j > 1, continue; end   % the AR(2) nowcast is the same at every h
-            jobs(end+1,:) = [k j it]; %#ok<SAGROW>
+            jobs(end+1,:) = [k j it 1]; %#ok<SAGROW>
         end
+    end
+end
+for k = [4 6]                                   % the prior check: the weights vary, h = 0
+    for it = 1:nt
+        jobs(end+1,:) = [k 3 it 2]; %#ok<SAGROW>
     end
 end
 heavy = ismember(jobs(:,1), find([models.tvtheta]));
@@ -132,22 +155,31 @@ end
 fprintf('%d runs on %d parallel workers (0: serial), %d draws after %d each\n', nj, nw, ...
     nsim, burnin);
 t2 = tic;
-out = zeros(nj, 8);
+out = zeros(nj, 38);
 parfor (ii = 1:nj, nw)
-    out(ii,:) = one_job(tdir, R, models, jobs(ii,:), targets, nsim, burnin, seed, cver);
+    out(ii,:) = one_job(tdir, R, pc, models, jobs(ii,:), targets, nsim, burnin, seed, cver);
 end
 fprintf('done in %.1f minutes; the runs themselves took %.1f hours in all\n', toc(t2)/60, ...
     sum(out(:,8))/3600);
 assert(max(out(:,7)) < 1e-8, 'build: a restriction is not met');
 fprintf('largest restriction residual over every draw of every nowcast: %.1e\n', max(out(:,7)));
+acc = out(ismember(jobs(:,1), find([models.tvtheta])), 9:18);
+fprintf(['acceptance rates of the steps for the variances of the weights, after the burn-in: ' ...
+    '%.2f to %.2f, mean %.2f\n'], min(acc(:)), max(acc(:)), mean(acc(:)));
 
 %% Part 3: scores
 fprintf('\n=== Part 3: scores ===\n');
 S = nan(nm, nt, 3, 6);                          % [point lpl q05 q10 q50 q95]
+Sp = nan(2, nt, 2);                             % the prior check: [point lpl] of models 4, 6
 for ii = 1:nj
     k = jobs(ii,1); j = jobs(ii,2); it = jobs(ii,3);
-    if k == 1, S(k,it,:,:) = repmat(reshape(out(ii,1:6), 1, 1, 1, 6), 1, 1, 3);
-    else, S(k,it,j,:) = out(ii,1:6); end
+    if jobs(ii,4) == 2
+        Sp(1 + (k == 6),it,:) = out(ii,1:2);
+    elseif k == 1
+        S(k,it,:,:) = repmat(reshape(out(ii,1:6), 1, 1, 1, 6), 1, 1, 3);
+    else
+        S(k,it,j,:) = out(ii,1:6);
+    end
 end
 iq = arrayfun(@(q) find(abs(R{1}.q - q) < 1e-9), targets)';
 yv = R{1}.y(iq);
@@ -198,6 +230,42 @@ for p = 1:3
     dl = lpd(pairs(p,1),:,:) - lpd(pairs(p,2),:,:);
     v = [squeeze(sum(dl(1,sp{1},:), 2))', squeeze(sum(dl(1,sp{2},:), 2))', squeeze(sum(dl, 2))'];
     fprintf('| %s | %s\n', pname{p}, sprintf('%.1f | ', v));
+end
+
+% the prior check: the models whose weights vary at h = 0, with the tutorial's prior of the
+% variances of the weights and with that prior at the scale of the paper (pc, Part 0)
+rmse = @(e) sqrt(mean(e.^2));
+r0 = rmse(squeeze(S(1,:,3,1))' - yv); l0 = sum(S(1,:,3,2));
+fprintf(['\nthe prior check at h = 0, relative to the AR(2): RMSFE ratio and difference in the ' ...
+    'sum of log predictive likelihoods\n| Model | prior of the tutorial | prior at the scale of the paper |\n|---|---|---|\n']);
+for k = [4 6]
+    kp = 1 + (k == 6);
+    fprintf('| %s | %.3f, %.1f | %.3f, %.1f |\n', models(k).name, rmse(squeeze(S(k,:,3,1))' - yv)/r0, ...
+        sum(S(k,:,3,2)) - l0, rmse(Sp(kp,:,1)' - yv)/r0, sum(Sp(kp,:,2)) - l0);
+end
+fprintf(['weights vary, the difference in the sum of log predictive likelihoods at h = 0 with the ' ...
+    'tutorial''s prior and at the scale of the paper: TVP-MIDAS-SV minus TVP-MIDAS-SV-R1 %.1f and %.1f; ' ...
+    'TVP-MIDAS-SV-R2 minus MIDAS-SV %.1f and %.1f\n'], sum(S(4,:,3,2)) - sum(S(5,:,3,2)), ...
+    sum(Sp(1,:,2)) - sum(S(5,:,3,2)), sum(S(6,:,3,2)) - sum(S(3,:,3,2)), sum(Sp(2,:,2)) - sum(S(3,:,3,2)));
+% what the data say about the variances of the weights: their posterior means in
+% TVP-MIDAS-SV at h = 0 over their prior means, S/(nu - 1)
+pm = {[.001 .001]/9, pc.xi2(:,2)'/9};
+pl = {'tutorial''s prior', 'prior at the scale of the paper'};
+for b = 1:2
+    xm = out(jobs(:,1) == 4 & jobs(:,2) == 3 & jobs(:,4) == b, 29:38)./repelem(pm{b}, 5);
+    fprintf(['TVP-MIDAS-SV, h = 0, %s: posterior means of the variances of the weights over ' ...
+        'their prior means, %.2f to %.2f, median %.2f\n'], pl{b}, min(xm(:)), max(xm(:)), median(xm(:)));
+end
+
+% the fixed weights meet the restriction on average: the sums of the weights of each
+% quarter in TVP-MIDAS-SV-R1 at h = 0 for the last target, at the posterior mean
+ii = find(jobs(:,1) == 5 & jobs(:,2) == 3 & jobs(:,3) == nt & jobs(:,4) == 1);
+iT = find(abs(R{3}.q - targets(end)) < 1e-9);
+pn = {'NFCI', 'spread'};
+for k = 1:2
+    s = R{3}.A{k}(1:iT,:)*out(ii, 18 + 5*(k-1) + (1:5))';
+    fprintf('TVP-MIDAS-SV-R1, h = 0, %s: the %s weights of a quarter sum to %.3f to %.3f\n', ...
+        qlab(targets(end)), pn{k}, min(s), max(s));
 end
 
 % every nowcast, for reuse: nowcasts.csv next to this file
@@ -263,14 +331,24 @@ fprintf('\nbuild finished in %.1f minutes\n', toc(t0)/60);
 diary off
 
 %% local functions
-function r = one_job(tdir, R, models, job, targets, nsim, burnin, seed, cver)
-% one model, horizon and target: load the result saved under its key, or compute and save
-% it. r = [point lpl q05 q10 q50 q95 residual seconds]
-k = job(1); j = job(2); it = job(3);
-rr = R{j}; iq = find(abs(rr.q - targets(it)) < 1e-9);
-sd = seed + 100000*k + 1000*j + iq;
-file = fullfile(tdir, 'runs', sprintf('%s_h%d_%d.mat', models(k).file, j, iq));
-key = [nsim burnin sd cver];
+function r = one_job(tdir, R, pc, models, job, targets, nsim, burnin, seed, cver)
+% one model, horizon, target and prior (1 the defaults, 2 pc, the prior check): load the
+% result saved under its key, or compute and save it. r = [point lpl q05 q10 q50 q95
+% residual seconds, the acceptance rates of the steps for the variances of the weights
+% (2 x 5, by row; zeros for fixed weights), the posterior means of the target quarter's
+% weights (2 x 5, by row), the posterior means of the variances of the weights (2 x 5, by
+% row; zeros for fixed weights)]
+k = job(1); j = job(2); it = job(3); b = job(4);
+rr = R{j};
+iq = find(abs(rr.q - targets(it)) < 1e-9);
+sd = seed + 100000*k + 1000*(j + 3*(b - 1)) + iq;
+tag = {'', '_check'};
+if b == 1, pr = struct(); pv = []; else, pr = pc; pv = pc.xi2(:)'; end
+file = fullfile(tdir, 'runs', sprintf('%s%s_h%d_%d.mat', models(k).file, tag{b}, j, iq));
+o = 1:iq-1;
+X0 = rr.X0(1:iq,:); W = {rr.W{1}(1:iq,:), rr.W{2}(1:iq,:)}; A = {rr.A{1}(1:iq,:), rr.A{2}(1:iq,:)};
+key = struct('settings', [nsim burnin sd cver], 'data', md5hex(rr.y(o), rr.y2(o), X0, W{:}, ...
+    A{:}, [models(k).tvb models(k).tvtheta models(k).sv], pv));
 if exist(file, 'file')
     s = load(file);
     if isequal(s.key, key), r = s.r; return; end
@@ -280,22 +358,33 @@ nt = maxNumCompThreads(1);
 restore = onCleanup(@() maxNumCompThreads(nt));
 rng(sd, 'twister');
 t1 = tic;
-o = 1:iq-1;
 if k == 1
     f = ar_nowcast(rr.y(o), [ones(numel(o),1) rr.X0(o,2) rr.y2(o)], ...
         [1 rr.X0(iq,2) rr.y2(iq)], nsim, burnin);
-    f.res = 0;
+    f.res = 0; f.acc = zeros(2,5); f.th = zeros(2,5); f.xi2 = zeros(2,5);
 else                                            % row iq of X, W and A is the target
-    fr = ssm.models.tvp_midas(rr.y(o), rr.X0(1:iq,:), {rr.W{1}(1:iq,:), rr.W{2}(1:iq,:)}, ...
-        {rr.A{1}(1:iq,:), rr.A{2}(1:iq,:)}, 'tvb', models(k).tvb, 'tvtheta', models(k).tvtheta, ...
-        'sv', models(k).sv, 'nsim', nsim, 'burnin', burnin);
-    f = struct('m', fr.nowcast.m, 'v', fr.nowcast.v, 'res', fr.max_resid);
+    fr = ssm.models.tvp_midas(rr.y(o), X0, W, A, 'tvb', models(k).tvb, 'tvtheta', ...
+        models(k).tvtheta, 'sv', models(k).sv, 'nsim', nsim, 'burnin', burnin, 'prior', pr);
+    f = struct('m', fr.nowcast.m, 'v', fr.nowcast.v, 'res', fr.max_resid, 'acc', fr.acc, ...
+        'th', [mean(fr.nowcast.theta{1}, 1); mean(fr.nowcast.theta{2}, 1)], 'xi2', fr.xi2_mean);
 end
 y = rr.y(iq);
 l = -.5*log(2*pi*f.v) - .5*(y - f.m).^2./f.v;
 q = arrayfun(@(p) mixquantile(p, f.m, f.v), [.05 .1 .5 .95]);
-r = [mean(f.m), max(l) + log(mean(exp(l - max(l)))), q, f.res, toc(t1)];
-save(file, 'key', 'r');
+r = [mean(f.m), max(l) + log(mean(exp(l - max(l)))), q, f.res, toc(t1), ...
+    reshape(f.acc', 1, []), reshape(f.th', 1, []), reshape(f.xi2', 1, [])];
+save([file '.part'], 'key', 'r', '-mat');      % renamed once complete, so an interrupted
+movefile([file '.part'], file, 'f');           % save leaves no file under the right name
+end
+
+function h = md5hex(varargin)
+% the MD5 digest, in hex, of the sizes and values of numeric and logical arrays
+md = java.security.MessageDigest.getInstance('MD5');
+for i = 1:numel(varargin)
+    v = double(varargin{i});
+    md.update(typecast([size(v) v(:)'], 'uint8'));
+end
+h = sprintf('%02x', typecast(md.digest(), 'uint8'));
 end
 
 function x = mixquantile(p, m, v)

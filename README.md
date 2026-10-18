@@ -174,13 +174,15 @@ it, `intlike_UC0.m` and `intlike_tvpvar.m`. `ssm.diffmat` and `ssm.lagpolymat` a
 scripts write out, and `ssm.select_obs` against the worked illustrations of Chan, Poon and Zhu
 (2023). `ssm.restrict` must equal, bit for bit, the update that ex05 and ex10 wrote out before
 it existed, and its conditional mean and covariance must equal those from dense algebra.
-`ssm.models.tvp_midas` must reproduce, draw for draw, the sampler with which the MIDAS tutorial's
-results were computed, kept in `tests/unit/private/`, in each of the tutorial's five models, and
-`ssm.midas_basis` must equal, bit for bit, the loop it replaced in that tutorial.
-`ssm.models.uc` and `ssm.models.uc_forecast` must reproduce, draw for draw, the code with which
-the UC tutorial's results were computed, in each of its four models. That code is also kept in
-`tests/unit/private/`. Their forecasts at every horizon must match paths simulated forward from
-the same draws.
+`ssm.models.tvp_midas` runs on generated data whose restriction rows change from period to period,
+and the restrictions must hold in every draw, those of the period to nowcast included. With
+high-frequency regressors of zeros, the variances of the weights must keep their prior, and the
+weights of the period to nowcast must have the moments of the random walk conditioned on every
+restriction. `ssm.midas_basis` with averaged rows must equal, bit for bit, the loop it replaced in
+the MIDAS tutorial. `ssm.models.uc` and `ssm.models.uc_forecast` must reproduce, draw for draw,
+the code with which the UC tutorial's results were computed, in each of its four models. That code
+is kept in `tests/unit/private/`. Their forecasts at every horizon must match paths simulated
+forward from the same draws.
 
 Files from other repositories that the tests run are held verbatim in
 [`tests/fixtures/`](tests/fixtures/), with their md5s. On every push to `main` and every pull

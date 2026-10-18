@@ -11,8 +11,9 @@
 %          monthly predictors, T x k0; a row T+1 holds the regressors of the period to
 %          nowcast
 %   W, A : 1 x J cells of the regressors w_jt' and the restriction rows a_jt' of the J
-%          high-frequency predictors (ssm.midas_basis), each with as many rows as X and
-%          the first column of each A{j} equal to 1
+%          high-frequency predictors (ssm.midas_basis), each with as many rows as X; the
+%          first column of each A{j} is positive: ones with the default scale of
+%          ssm.midas_basis, the numbers of observations with its 'sum' scale
 %
 %   'tvb'     : true lets the coefficients follow random walks; default true
 %   'tvtheta' : true lets the weights follow random walks; default true
@@ -20,10 +21,11 @@
 %   'prior'   : struct with any of the fields Vb and Vtheta, the prior variances of the
 %               first or constant coefficients and weights (default 10 each); omega2 and
 %               xi2, [nu S] of the IG priors of the random-walk variances of the
-%               coefficients and of the weights (defaults [5 .004] and [10 .001]); Vg, the
-%               prior variance of g_1 (default 10); sigma2g, [nu S] of the IG prior of the
-%               variance of its random walk (default [5 .04]); and sigma2, [nu S] of the IG
-%               prior of a constant error variance (default [5 16])
+%               coefficients and of the weights (defaults [5 .004] and [10 .001]; xi2 may
+%               have one row per predictor, J x 2); Vg, the prior variance of g_1 (default
+%               10); sigma2g, [nu S] of the IG prior of the variance of its random walk
+%               (default [5 .04]); and sigma2, [nu S] of the IG prior of a constant error
+%               variance (default [5 16])
 %   'nsim'    : draws kept, default 10000;  'burnin' : draws discarded first, default 5000
 %   'seed'    : if given, rng(seed, 'twister') is set before the first draw
 %   'thin'    : k > 0 also keeps every kth kept draw of the paths in res.draws; default 0
@@ -33,14 +35,18 @@
 %   res.b_mean     : T x (k0+J) posterior means of the coefficients, those on X first
 %   res.theta_mean : 1 x J cell of T x 5 posterior means of the weights
 %   res.g_mean     : T x 1 posterior mean of the log-volatility
+%   res.xi2_mean   : J x 5 posterior means of the random-walk variances of the weights;
+%                    zeros for constant weights
 %   res.max_resid  : largest |a_jt'*theta_jt - 1| over the kept draws, the target period
-%                    included; for constant weights, of the restriction averaged over t
+%                    included; for constant weights, of the restriction averaged over the
+%                    periods
 %   res.acc        : J x 5 acceptance rates of the steps for the random-walk variances of
 %                    the weights, after the burn-in; zeros for constant weights
 %   res.nowcast    : with a row to nowcast, m and v (nsim x 1), the mean and variance of
 %                    the normal density of y_{T+1} given each draw; mean and q, the mean
 %                    and the quantiles of their equally weighted mixture, the predictive
-%                    density; probs
+%                    density; probs; and theta, a 1 x J cell of the nsim x 5 draws of the
+%                    weights of the period to nowcast
 %   res.draws      : with thin > 0, b (draws x T x (k0+J)) and theta (1 x J cell of
 %                    draws x T x 5)
 %   res.prior, and the settings
@@ -50,7 +56,7 @@
 % The coefficients b_t = [c_t; beta_t] and each theta_jt start from N(0, Vb*I) and
 % N(0, Vtheta*I) and follow random walks with diagonal covariances, whose entries have the
 % priors IG(omega2) and IG(xi2); constant ones have the priors N(0, Vb*I) and
-% N(0, Vtheta*I), and constant weights meet the restriction averaged over the T periods.
+% N(0, Vtheta*I), and constant weights meet the restriction averaged over the periods.
 % g_t starts from N(0, Vg) and follows a random walk with an IG(sigma2g) variance; a
 % constant error variance has the prior IG(sigma2). IG(nu, S) has density proportional to
 % x^(-nu-1)*exp(-S/x). Each sweep draws b given the weights (ssm.simulate_states), the
@@ -60,10 +66,14 @@
 % with step sizes tuned toward an acceptance rate of 0.44 during the burn-in: their full
 % conditional is the inverse-gamma one of the unrestricted random walk divided by
 % N(1; 0, Q), with Q = Vtheta*A*A' + (A*diag(xi2)*A').*Lmin and Lmin(t,s) = min(t,s) - 1,
-% the covariance of the T values a_t'*theta_t under that random walk. For the period to
-% nowcast, each kept draw moves the time-varying states one period on and projects the
-% weights onto that period's restriction; these moves use random numbers, so a run with a
-% row to nowcast draws other parameter values than the same seed without one.
+% the covariance of the values a_t'*theta_t under that random walk.
+%
+% A row to nowcast makes the period to nowcast period T+1 of the weights. It has no
+% observation, and its restriction enters every draw of the weights, their average for
+% constant weights, and the Q of their variances. Each kept draw then moves the
+% coefficients and the log-volatility one period on along their random walks. These moves
+% use random numbers, so a run with a row to nowcast draws other values than the same seed
+% without one.
 %
 % See:
 % Chan, J.C.C., Poon, A. and Zhu, D. (2026). Time-Varying Parameter MIDAS Models:
@@ -126,8 +136,8 @@ for j = 1:J
     if ~isequal(size(W{j}), [nr kt]) || ~isequal(size(A{j}), [nr kt])
         error('ssm:models:tvp_midas:badData', 'W{%d} and A{%d} must be %d x %d, as many rows as X', j, j, nr, kt);
     end
-    if any(abs(A{j}(:,1) - 1) > 1e-12) || any(~isfinite([W{j}(:); A{j}(:)]))
-        error('ssm:models:tvp_midas:badData', 'A{%d} must have a first column of ones, and W{%d} and A{%d} finite values', j, j, j);
+    if any(~isfinite([W{j}(:); A{j}(:)])) || any(A{j}(:,1) <= 0)
+        error('ssm:models:tvp_midas:badData', 'W{%d} and A{%d} must be finite, and the first column of A{%d} positive', j, j, j);
     end
 end
 if ~(isscalar(nsim) && nsim >= 1 && nsim == fix(nsim) && isscalar(burnin) && burnin >= 0 && burnin == fix(burnin))
@@ -139,20 +149,23 @@ end
 if ~(isempty(probs) || (isvector(probs) && all(probs > 0 & probs < 1)))
     error('ssm:models:tvp_midas:badOption', 'the quantiles must lie strictly between 0 and 1');
 end
-pv = [pr.Vb pr.Vtheta pr.Vg pr.omega2 pr.xi2 pr.sigma2g pr.sigma2];
-if numel(pv) ~= 11 || ~isnumeric(pv) || any(~isfinite(pv)) || any(pv <= 0)
+pos = @(v) isnumeric(v) && all(isfinite(v(:))) && all(v(:) > 0);
+if ~(all(cellfun(@(v) isscalar(v) && pos(v), {pr.Vb, pr.Vtheta, pr.Vg})) && ...
+        all(cellfun(@(v) numel(v) == 2 && pos(v), {pr.omega2, pr.sigma2g, pr.sigma2})) && ...
+        pos(pr.xi2) && size(pr.xi2, 2) == 2 && ismember(size(pr.xi2, 1), [1 max(J, 1)]))
     error('ssm:models:tvp_midas:badOption', ['the prior needs positive scalars Vb, Vtheta and Vg, ' ...
-        'and positive pairs [nu S] for omega2, xi2, sigma2g and sigma2']);
+        'positive pairs [nu S] for omega2, sigma2g and sigma2, and for xi2 one pair or one per predictor']);
 end
 if var(y) == 0
     error('ssm:models:tvp_midas:badData', 'y is constant');
 end
 nowcast = nr == n + 1;
+ne = nr;                                        % the periods of the weights, the target's too
 if nowcast
-    xT.x0 = X(n+1,:); xT.w = cell(1,J); xT.a = cell(1,J);
+    xT.x0 = X(n+1,:); xT.w = cell(1,J);
     for j = 1:J
-        xT.w{j} = W{j}(n+1,:); xT.a{j} = A{j}(n+1,:);
-        W{j} = W{j}(1:n,:); A{j} = A{j}(1:n,:);
+        xT.w{j} = W{j}(n+1,:);
+        W{j} = W{j}(1:n,:);                     % A{j} keeps the target's row
     end
     X = X(1:n,:);
 end
@@ -161,31 +174,41 @@ if ~isempty(seed), rng(seed, 'twister'); end
 % priors and the matrices of the random walks
 k0 = size(X, 2); kb = k0 + J;
 Vb = pr.Vb; Vth = pr.Vtheta; nuom = pr.omega2(1); Som = pr.omega2(2);
-nuxi = pr.xi2(1); Sxi = pr.xi2(2); nug = pr.sigma2g(1); Sg = pr.sigma2g(2); Vg = pr.Vg;
+xp = pr.xi2;
+if size(xp, 1) == 1, xp = repmat(xp, max(J, 1), 1); end   % one row per predictor
+nuxi = xp(:,1); Sxi = xp(:,2); nug = pr.sigma2g(1); Sg = pr.sigma2g(2); Vg = pr.Vg;
 nus = pr.sigma2(1); Ss = pr.sigma2(2);
-H7 = kron(ssm.diffmat(n), speye(kb)); H5 = kron(ssm.diffmat(n), speye(kt));
+H7 = kron(ssm.diffmat(n), speye(kb)); H5 = kron(ssm.diffmat(ne), speye(kt));
 Mr = cell(1,J);
 for j = 1:J
     if tvtheta
-        Mr{j} = sparse(repelem((1:n)', kt), (1:n*kt)', reshape(A{j}', [], 1), n, n*kt);
+        Mr{j} = sparse(repelem((1:ne)', kt), (1:ne*kt)', reshape(A{j}', [], 1), ne, ne*kt);
     else
         Mr{j} = mean(A{j}, 1);
     end
 end
 if tvtheta
-    Lmin = min((0:n-1)', 0:n-1);                % min(t,s) - 1
+    Lmin = min((0:ne-1)', 0:ne-1);              % min(t,s) - 1
     AA = cell(1,J);
     for j = 1:J, AA{j} = Vth*(A{j}*A{j}'); end
     step = .3*ones(J, kt); nacc = zeros(J, kt); nbatch = zeros(J, kt);
 end
 
-% initial values: theta = e_1 meets every restriction, since the first basis is 1
-B = [zeros(n,k0), ones(n,J)];
-Th = repmat({[ones(n,1), zeros(n,kt-1)]}, 1, J);
+% initial values: theta_t = e_1/a_t1 meets each restriction, as a_t1, the sum or the mean
+% of the constant basis function, is positive; theta = e_1/mean(a_t1) meets their average
+Th = cell(1,J);
+for j = 1:J
+    if tvtheta
+        Th{j} = [1./A{j}(:,1), zeros(ne,kt-1)];
+    else
+        Th{j} = repmat([1/mean(A{j}(:,1)), zeros(1,kt-1)], ne, 1);
+    end
+end
 g = log(var(y))*ones(n,1); sig2g = .1;
 om2 = .01*ones(kb,1); xi2 = repmat({.001*ones(kt,1)}, 1, J);
-ym = zeros(nsim,1); yv = zeros(nsim,1); mres = 0;
+ym = zeros(nsim,1); yv = zeros(nsim,1); mres = 0; thn = repmat({zeros(nsim,kt)}, 1, J);
 b_sum = zeros(n,kb); th_sum = repmat({zeros(n,kt)}, 1, J); g_sum = zeros(n,1);
+xi2_sum = zeros(J,kt);
 if thin > 0
     ns = floor(nsim/thin);
     Db = zeros(ns, n, kb); Dth = repmat({zeros(ns, n, kt)}, 1, J);
@@ -194,7 +217,7 @@ end
 for loop = 1:nsim + burnin
     ie = exp(-g);
     z = zeros(n, J);
-    for j = 1:J, z(:,j) = sum(Th{j}.*W{j}, 2); end
+    for j = 1:J, z(:,j) = sum(Th{j}(1:n,:).*W{j}, 2); end
     % the coefficients, given the weights
     Xb = [X, z];
     if tvb
@@ -211,20 +234,21 @@ for loop = 1:nsim + burnin
         o = [1:j-1, j+1:J];
         yt = y - sum(X.*B(:,1:k0), 2) - sum(B(:,k0+o).*z(:,o), 2);
         Xt = B(:,k0+j).*W{j};
-        if tvtheta
-            Zt = ssm.surform(Xt);
-            iS = spdiags([ones(kt,1)/Vth; repmat(1./xi2{j}, n-1, 1)], 0, n*kt, n*kt);
-            K = H5'*iS*H5 + Zt'*spdiags(ie, 0, n, n)*Zt;
-            [th, ~, C] = ssm.simulate_states(K, Zt'*(ie.*yt));
-            th = ssm.restrict(th, C, Mr{j}, ones(n,1));
-            Th{j} = reshape(th, kt, n)';
+        if tvtheta                              % the period to nowcast has no observation
+            Zt = ssm.surform([Xt; zeros(ne-n, kt)]);
+            iee = [ie; zeros(ne-n, 1)];
+            iS = spdiags([ones(kt,1)/Vth; repmat(1./xi2{j}, ne-1, 1)], 0, ne*kt, ne*kt);
+            K = H5'*iS*H5 + Zt'*spdiags(iee, 0, ne, ne)*Zt;
+            [th, ~, C] = ssm.simulate_states(K, Zt'*(iee.*[yt; zeros(ne-n, 1)]));
+            th = ssm.restrict(th, C, Mr{j}, ones(ne,1));
+            Th{j} = reshape(th, kt, ne)';
         else
             K = eye(kt)/Vth + Xt'*(ie.*Xt);
             [th, ~, C] = ssm.simulate_states(K, Xt'*(ie.*yt));
             th = ssm.restrict(th, C, Mr{j}, 1);
-            Th{j} = repmat(th', n, 1);
+            Th{j} = repmat(th', ne, 1);
         end
-        z(:,j) = sum(Th{j}.*W{j}, 2);
+        z(:,j) = sum(Th{j}(1:n,:).*W{j}, 2);
     end
     % the volatility
     e = y - sum(X.*B(:,1:k0), 2) - sum(B(:,k0+1:end).*z, 2);
@@ -241,7 +265,7 @@ for loop = 1:nsim + burnin
     if tvtheta
         for j = 1:J
             [xi2{j}, a] = xi2_mh(xi2{j}, sum(diff(Th{j}).^2, 1)', A{j}, AA{j}, Lmin, ...
-                nuxi, Sxi, step(j,:)');
+                nuxi(j), Sxi(j), step(j,:)');
             if loop <= burnin
                 nbatch(j,:) = nbatch(j,:) + a';
                 if mod(loop, 100) == 0          % aim at acceptance rates near 0.44
@@ -258,34 +282,29 @@ for loop = 1:nsim + burnin
         for j = 1:J
             if tvtheta
                 mres = max([mres; abs(Mr{j}*reshape(Th{j}', [], 1) - 1)]);
+                xi2_sum(j,:) = xi2_sum(j,:) + xi2{j}';
             else
                 mres = max(mres, abs(Mr{j}*Th{j}(1,:)' - 1));
             end
         end
-        % the period to nowcast: the states one period on, theta projected onto its
-        % restriction
+        % the period to nowcast: the coefficients and the log-volatility one period on,
+        % and the weights of period T+1, drawn with every restriction
         if nowcast
             bT = B(n,:)';
             if tvb, bT = bT + sqrt(om2).*randn(kb,1); end
             mT = xT.x0*bT(1:k0);
             for j = 1:J
-                thT = Th{j}(n,:)';
-                if tvtheta
-                    a = xT.a{j}';
-                    thT = thT + sqrt(xi2{j}).*randn(kt,1);
-                    thT = thT + xi2{j}.*a*((1 - a'*thT)/(a'*(xi2{j}.*a)));
-                    mres = max(mres, abs(xT.a{j}*thT - 1));
-                end
-                mT = mT + bT(k0+j)*(xT.w{j}*thT);
+                thn{j}(i,:) = Th{j}(ne,:);
+                mT = mT + bT(k0+j)*(xT.w{j}*Th{j}(ne,:)');
             end
             if sv, gT = g(n) + sqrt(sig2g)*randn; else, gT = g(n); end
             ym(i) = mT; yv(i) = exp(gT);
         end
         b_sum = b_sum + B; g_sum = g_sum + g;
-        for j = 1:J, th_sum{j} = th_sum{j} + Th{j}; end
+        for j = 1:J, th_sum{j} = th_sum{j} + Th{j}(1:n,:); end
         if thin > 0 && mod(i, thin) == 0
             Db(i/thin,:,:) = B;
-            for j = 1:J, Dth{j}(i/thin,:,:) = Th{j}; end
+            for j = 1:J, Dth{j}(i/thin,:,:) = Th{j}(1:n,:); end
         end
     end
 end
@@ -293,11 +312,13 @@ end
 res.b_mean = b_sum/nsim;
 res.theta_mean = cellfun(@(s) s/nsim, th_sum, 'UniformOutput', false);
 res.g_mean = g_sum/nsim;
+res.xi2_mean = xi2_sum/nsim;
 res.max_resid = mres;
 if tvtheta, res.acc = nacc/nsim; else, res.acc = zeros(J, kt); end
 if nowcast
     q = arrayfun(@(p) mixquantile(p, ym, yv), probs);
-    res.nowcast = struct('m', ym, 'v', yv, 'mean', mean(ym), 'q', q, 'probs', probs);
+    res.nowcast = struct('m', ym, 'v', yv, 'mean', mean(ym), 'q', q, 'probs', probs, ...
+        'theta', {thn});
 end
 if thin > 0, res.draws = struct('b', Db, 'theta', {Dth}); end
 res.prior = pr;

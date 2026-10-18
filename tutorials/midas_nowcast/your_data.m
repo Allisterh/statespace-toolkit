@@ -8,19 +8,22 @@
 % and scored by the root mean squared forecast error and the sum of log predictive
 % likelihoods. With latest = true each model also nowcasts the quarter after the last
 % one observed, at the latest month-end the predictors reach: the monthly ones up to their
-% release lag, and each weekly or daily one into the last seven days of the month. The
-% defaults use the tutorial's data with short chains and take about a minute; the numbers
-% on the page come from build.m. The report goes to outdir, tempdir by default.
+% release lag, and each weekly or daily one with a release in the last seven days of the
+% month. The defaults use the tutorial's data with short chains and take about a minute;
+% the numbers on the page come from build.m. The report goes to outdir, tempdir by
+% default.
 %
 % Every file is a csv with a date column. The target is in levels turned into 400 times
 % their log changes (qtransform = 'dlog400') or used as it is ('none'). Keep the target
 % in percent, as such log changes are, since the volatility step adds 1e-4 to each
-% squared error before it takes the log. The monthly
-% predictors are columns of one file, log-differenced (mtransform = 'dlog') or not
-% ('none') and then multiplied by mscale; a numeric date column is read as year +
-% month/12, the convention of the FRED-MD file. The weekly and daily predictors are used
-% as they are. Each predictor must cover the quarters from qfirst to the end of the
-% sample, the monthly ones from five months earlier.
+% squared error before it takes the log. The monthly predictors are columns of one file,
+% log-differenced (mtransform = 'dlog') or not ('none') and then multiplied by mscale; a
+% numeric date column is read as year + month/12, the convention of the FRED-MD file.
+% The weekly and daily predictors are used as they are, each value from its release date:
+% hrelease holds, for each of them, a function that turns its dates into release dates,
+% or [] when its values are released on their dates. Each predictor must cover the
+% quarters from qfirst to the end of the sample, the monthly ones from five months
+% earlier.
 
 here = fileparts(mfilename('fullpath'));
 repo = fileparts(fileparts(here));
@@ -34,6 +37,7 @@ mfile = fullfile(d, 'FRED-MD.csv'); mcols = {'INDPRO'}; mtransform = 'none'; msc
 mlag = 1;                          % months by which the monthly predictors are released late
 hfiles = {fullfile(d, 'NFCI_weekly.csv'), fullfile(d, 'T10Y3M_daily.csv')};
 hcols = {'NFCI', 'T10Y3M'};
+hrelease = {@nfci_release, []};    % the release dates of each weekly or daily predictor
 qfirst = datetime(1982,4,1);       % the first quarter of the estimation sample
 models = {'AR(2)'                  % delete a row to leave a model out
           'MIDAS'
@@ -74,10 +78,13 @@ X = mscale*X;
 ok = all(~isnan(X), 2); md = md(ok); X = X(ok,:);
 assert(all(calmonths(between(md(1:end-1), md(2:end))) == 1), ...
     'your_data: the monthly predictors must be monthly, without gaps');
+assert(numel(hcols) == numel(hfiles) && numel(hrelease) == numel(hfiles), ...
+    'your_data: hfiles, hcols and hrelease must have one entry per weekly or daily predictor');
 hf = cell(1, numel(hfiles));
 for k = 1:numel(hfiles)
     [hd, hx] = read_series(hfiles{k}, hcols{k});
     hf{k} = struct('d', hd(~isnan(hx)), 'x', hx(~isnan(hx)));
+    if ~isempty(hrelease{k}), hf{k}.r = hrelease{k}(hf{k}.d); end
 end
 first = find(qd == qfirst);
 assert(isscalar(first) && first > 2, 'your_data: qfirst must be a quarter of the target, after its second');
@@ -136,10 +143,9 @@ if latest
         ql = qlab(Rn.q(end));
         hl = {'2/3', '1/3', '0'};
         fprintf('\nnowcasts of %s at the end of its month %d (h = %s)\n', ql, jl, hl{jl});
-        oend = qn + calmonths(jl) - caldays(1);
         fprintf('latest values used: the monthly predictors %s', char(Rn.iplast(end), 'MMM yyyy'));
         for k = 1:numel(hf)
-            fprintf(', %s %s', hcols{k}, char(max(hf{k}.d(hf{k}.d <= oend)), 'd MMM yyyy'));
+            fprintf(', %s %s', hcols{k}, char(Rn.hlast(end,k), 'd MMM yyyy'));
         end
         fprintf('\n| Model | nowcast | 90%% interval |\n|---|---|---|\n');
         for k = 1:nm
@@ -161,7 +167,8 @@ if ~isempty(outdir)
     [msg, id] = lastwarn;
     meta = struct('qfile', qfile, 'qcol', qcol, 'qtransform', qtransform, 'mfile', mfile, ...
         'mcols', {mcols}, 'mtransform', mtransform, 'mscale', mscale, 'mlag', mlag, ...
-        'hfiles', {hfiles}, 'hcols', {hcols}, 'qfirst', qfirst, 'nfc', nfc, 'nsim', nsim, ...
+        'hfiles', {hfiles}, 'hcols', {hcols}, 'hrelease', {cellfun(@release_rule, hrelease, ...
+        'UniformOutput', false)}, 'qfirst', qfirst, 'nfc', nfc, 'nsim', nsim, ...
         'burnin', burnin, 'seed', seed, 'nowcast_quarter', ql, 'nowcast_month', jl, ...
         'run_time', datetime('now'), 'matlab_version', version, 'last_warning', msg, ...
         'last_warning_id', id);
@@ -208,4 +215,9 @@ function x = mixquantile(p, m, v)
 % the p-quantile of the equally weighted mixture of N(m_i, v_i)
 s = sqrt(v);
 x = fzero(@(q) mean(normcdf((q - m)./s)) - p, [min(m - 8*s) max(m + 8*s)]);
+end
+
+function s = release_rule(f)
+% the release rule of a weekly or daily predictor, as text for the report
+if isempty(f), s = 'on its dates'; else, s = func2str(f); end
 end

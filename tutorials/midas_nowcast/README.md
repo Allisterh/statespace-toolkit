@@ -39,7 +39,7 @@ Two commands, from the root of the repository:
 | Command | What it produces | Time |
 |---|---|---|
 | `run tutorials/midas_nowcast/your_data.m` | the six models on the same data with short chains, nowcasting the last two quarters at all three horizons and the quarter after the last one observed, and the exported report | about a minute |
-| `run tutorials/midas_nowcast/build.m` | every number and figure on this page | about four hours with 8 CPUs |
+| `run tutorials/midas_nowcast/build.m` | every number and figure on this page | about three hours with 8 CPUs |
 
 The short run checks that the workflow runs end to end. Its two quarters are far too few for the
 numbers on this page, which all come from the full build. Its settings block is where you point it
@@ -49,7 +49,7 @@ at your own files.
 
 *Figure 1: The cumulative difference in log predictive score of each MIDAS model against the
 AR(2), plotted at the target quarter. The nowcasts are made at the end of the quarter (h = 0).
-Every model gains on the AR(2) over the sample, most in 2008 and 2009.*
+Every model gains on the AR(2) over the sample, most in the fourth quarter of 2008.*
 
 ## The Six Models
 
@@ -63,9 +63,9 @@ growth available at the origin, each with its own coefficient. The index $`j`$ i
 and 2 for the spread.
 
 Let $`x_{jtk}`$, $`k = 1, \ldots, n_{jt}`$, be the observations of predictor $`j`$ in the three
-months ending at the origin. The position of observation $`k`$ in this window is
-$`s_{jtk} = (\text{origin} - \text{date})/(\text{window length})`$, from 0 at the origin to 1 at
-the start of the window. Its weight is
+months ending at the origin that are released by then. The position of observation $`k`$ in this
+window is $`s_{jtk} = (\text{origin} - \text{date})/(\text{window length})`$, from 0 at the origin
+to 1 at the start of the window. Its weight is
 
 $$B(s_{jtk}; \boldsymbol{\theta}_{jt}) = \frac{\boldsymbol{\theta}_{jt}'\mathbf{v}(s_{jtk})}{n_{jt}}, \qquad \mathbf{v}(s) = (1, \cos 2\pi s, \sin 2\pi s, \cos 4\pi s, \sin 4\pi s)',$$
 
@@ -81,7 +81,9 @@ weights of each quarter sum to one: $`\mathbf{a}_{jt}'\boldsymbol{\theta}_{jt} =
 $`\mathbf{a}_{jt} = \sum_k \mathbf{v}(s_{jtk})/n_{jt}`$ is the mean of the basis over the window.
 This linear restriction identifies $`\beta_{jt}`$ as the overall impact of the predictor. Since
 the dates of the observations shift from quarter to quarter, the models with fixed weights impose
-the restriction on average over the quarters of the estimation sample.
+the restriction on average over the quarters, the target quarter included. In TVP-MIDAS-SV-R1 for
+2019Q4 at h = 0, the weights of a quarter then sum to between 0.97 and 1.02 for the NFCI and
+between 0.97 and 1.08 for the spread.
 
 | Model | Coefficients $`(\alpha_t, \rho_t, \boldsymbol{\gamma}_t, \boldsymbol{\beta}_t)`$ | Weights $`\boldsymbol{\theta}_{jt}`$ | Volatility $`g_t`$ |
 |---|---|---|---|
@@ -99,7 +101,11 @@ $`\mathcal{IG}(10, 0.001)`$ for the weights. The log-volatility starts from
 $`g_1 \sim \mathcal{N}(0, 10)`$, with innovation variance $`\mathcal{IG}(5, 0.04)`$, where
 $`\mathcal{IG}(\nu, S)`$ has density proportional to $`x^{-(\nu+1)}\mathrm{e}^{-S/x}`$. We assume
 the constant variance follows $`\mathcal{IG}(5, 16)`$, with mean 4. We give the AR(2) the priors
-of the constant-parameter MIDAS regressions.
+of the constant-parameter MIDAS regressions. The paper sets these values for weights
+$`\boldsymbol{\theta}_{jt}'\mathbf{v}(s_{jtk})`$, without the division by $`n_{jt}`$. On the scale
+of this tutorial, the same values keep the initial weights closer to equal and let them move
+less, both by a factor of about $`n_{jt}`$ in standard deviation. The prior check under What Can
+Go Wrong uses the paper's scale for the variances of the weights.
 
 ## The Function Call
 
@@ -110,7 +116,7 @@ origin:
 
 ```matlab
 for j = 1:2                                    % the NFCI and the spread
-    [W{j}, A{j}] = ssm.midas_basis(d{j}, x{j}, wstart, wend);
+    [W{j}, A{j}] = ssm.midas_basis(d{j}, x{j}, wstart, wend, 'release', r{j});
 end
 res = ssm.models.tvp_midas(y, X, W, A, 'tvb', true, 'tvtheta', false, 'sv', true, ...
     'nsim', 10000, 'burnin', 5000);
@@ -122,13 +128,14 @@ res.nowcast.q                                  % its 5, 10, 50, 90 and 95 percen
 |---|---|---|
 | `d{j}`, `x{j}` | the dates and values of the observations $`x_{jtk}`$ | the weekly NFCI and the daily spread |
 | `wstart`, `wend` | the window of each quarter, which starts after `wstart`, ends at `wend` and fixes $`s_{jtk}`$ | the three months ending at the origin |
+| `'release'`, `r{j}` | the release dates of the observations; an observation enters a window only if released by its end | the release days of the NFCI; the dates of the spread |
 | `y` | $`y_t`$ for the quarters before the target | GDP growth from 1982Q2 |
 | `X` | $`(1, y_{t-1}, z_{1t}, z_{2t}, z_{3t})`$, with a last row for the target quarter | the intercept, last quarter's growth and three months of industrial production |
 | `W{j}`, `A{j}` | $`\mathbf{w}_{jt}`$ and $`\mathbf{a}_{jt}`$, with a last row for the target quarter | from `ssm.midas_basis` |
 | `'tvb'` | random walks for $`\alpha_t`$, $`\rho_t`$, $`\boldsymbol{\gamma}_t`$ and $`\boldsymbol{\beta}_t`$ | true in TVP-MIDAS-SV and TVP-MIDAS-SV-R1 |
 | `'tvtheta'` | random walks for $`\boldsymbol{\theta}_{jt}`$ | true in TVP-MIDAS-SV and TVP-MIDAS-SV-R2 |
 | `'sv'` | a random walk for $`g_t`$ | true in all but MIDAS |
-| `'prior'` | the priors above | the defaults, which are the paper's |
+| `'prior'` | the priors above | the defaults, the paper's values |
 | `'nsim'`, `'burnin'` | the draws kept and the draws discarded first | 10,000 and 5,000, the paper's chain length |
 
 Each sweep of the sampler takes four steps:
@@ -137,8 +144,8 @@ Each sweep of the sampler takes four steps:
    [`ssm.simulate_states`](../../core/+ssm/simulate_states.m), the precision sampler of Chan and
    Jeliazkov (2009).
 2. The weights of each predictor, given the coefficients, by `ssm.simulate_states` followed by
-   [`ssm.restrict`](../../core/+ssm/restrict.m), which conditions the draw on the restrictions
-   (Algorithm 2.6 of Rue and Held, 2005).
+   [`ssm.restrict`](../../core/+ssm/restrict.m), which conditions the draw on the restrictions of
+   every quarter, the target's included (Algorithm 2.6 of Rue and Held, 2005).
 3. The log-volatility, by [`ssm.ksc_rw_diffuse`](../../core/+ssm/ksc_rw_diffuse.m), the
    auxiliary mixture sampler of Kim, Shephard and Chib (1998). It approximates the log
    chi-squared distribution of each log squared standardized error by a mixture of seven normal
@@ -146,11 +153,12 @@ Each sweep of the sampler takes four steps:
 4. The variances of the random walks, and the error variance in the models with constant
    volatility.
 
-For the target quarter, each draw moves the time-varying coefficients, weights and log-volatility
-one quarter on along their random walks. The weights are then projected onto the target quarter's
-restriction. Given these draws, the nowcast is normal. The predictive density is the average of
-these normal densities over the draws, the point nowcast the average of their means, and the
-quantiles those of the mixture.
+The target quarter is the last quarter of the weights' random walks. It has no GDP observation,
+and its restriction holds in every draw of the weights. Each draw moves the time-varying
+coefficients and log-volatility one quarter on along their random walks. Given these draws, the
+nowcast is normal. The predictive density is the average of these normal densities
+over the draws, the point nowcast the average of their means, and the quantiles those of the
+mixture.
 
 ## Results for US GDP
 
@@ -170,11 +178,11 @@ is 2.19 and its sum of log predictive likelihoods -264.4.*
 
 | Model | RMSFE, h = 2/3 | 1/3 | 0 | Log score, h = 2/3 | 1/3 | 0 | Quantile score, h = 2/3 | 1/3 | 0 |
 |---|---|---|---|---|---|---|---|---|---|
-| MIDAS | 0.985 | 0.942 | 0.928 | 4.7 | 11.4 | 13.7 | 0.978 | 0.876 | 0.862 |
-| MIDAS-SV | 0.980 | 0.942 | 0.937 | 5.3 | 10.6 | 12.5 | 0.990 | 0.877 | 0.853 |
-| TVP-MIDAS-SV | 0.947 | 0.897 | 0.904 | 9.6 | 16.7 | 17.4 | 0.971 | 0.837 | 0.828 |
-| TVP-MIDAS-SV-R1 | 0.953 | 0.902 | 0.906 | 9.6 | 16.7 | 17.1 | 0.976 | 0.843 | 0.833 |
-| TVP-MIDAS-SV-R2 | 0.976 | 0.942 | 0.936 | 5.3 | 10.3 | 12.5 | 0.984 | 0.877 | 0.850 |
+| MIDAS | 0.984 | 0.942 | 0.928 | 4.7 | 11.5 | 13.7 | 0.977 | 0.876 | 0.862 |
+| MIDAS-SV | 0.978 | 0.941 | 0.937 | 5.3 | 10.7 | 12.4 | 0.990 | 0.877 | 0.853 |
+| TVP-MIDAS-SV | 0.946 | 0.897 | 0.906 | 9.5 | 16.9 | 17.2 | 0.971 | 0.835 | 0.831 |
+| TVP-MIDAS-SV-R1 | 0.950 | 0.900 | 0.906 | 9.4 | 17.0 | 17.1 | 0.975 | 0.842 | 0.833 |
+| TVP-MIDAS-SV-R2 | 0.977 | 0.943 | 0.938 | 5.3 | 10.3 | 12.3 | 0.983 | 0.877 | 0.853 |
 
 The RMSFE scores the point nowcast, the mean of the predictive distribution. The log predictive
 likelihood scores the whole distribution: it is the log of the predictive density at the outcome,
@@ -184,20 +192,21 @@ left tail. The 90 percent predictive intervals contain between 87 and 91 percent
 for every model and horizon.
 
 The AR(2) uses none of the quarter's data, and every MIDAS model gains on it as these data come
-in. At the end of the first month, the RMSFE of the MIDAS models is 1.5 to 5.3 percent below the
-AR(2)'s. From the end of the second month, it is 5.8 to 10.3 percent below, and the data of the
+in. At the end of the first month, the RMSFE of the MIDAS models is 1.6 to 5.4 percent below the
+AR(2)'s. From the end of the second month, it is 5.7 to 10.3 percent below, and the data of the
 third month add little.
 
 ### Time-Varying Coefficients or Time-Varying Weights?
 
 TVP-MIDAS-SV and TVP-MIDAS-SV-R1 differ in whether the weights vary, and so in how their
 restriction holds: in every quarter, or on average over the sample. Their scores agree to within
-0.4 in the log predictive likelihood and 0.006 in the relative RMSFE at each horizon.
+0.2 in the log predictive likelihood and 0.004 in the relative RMSFE at each horizon.
 TVP-MIDAS-SV-R2 and MIDAS-SV differ the same way, with the coefficients held constant, and agree
-to within 0.4 and 0.004. Time variation in the coefficients lowers the RMSFE by 3 to 5 percent of
+to within 0.5 and 0.002. Time variation in the coefficients lowers the RMSFE by 3 to 4 percent of
 the AR(2)'s and raises the log predictive likelihood by 4 to 6. Under the priors used here, time
-variation in the weights adds little to either. Figure 2 shows both comparisons quarter by
-quarter, and Table 2 splits them at 2008.
+variation in the weights adds little to either. The same holds with the paper's scale for the
+prior on how fast the weights move. Figure 2 shows both comparisons quarter by quarter, and Table
+2 splits them at 2008.
 
 ![Cumulative difference in log predictive score between models that differ in one feature](fig_compare.png)
 
@@ -211,13 +220,13 @@ in one feature, by subperiod.*
 
 | Comparison | 1990Q1-2007Q4, h = 2/3 | 1/3 | 0 | 2008Q1-2019Q4, h = 2/3 | 1/3 | 0 |
 |---|---|---|---|---|---|---|
-| Coefficients vary: TVP-MIDAS-SV-R1 minus MIDAS-SV | 0.7 | 0.4 | -0.5 | 3.5 | 5.7 | 5.2 |
-| Weights vary: TVP-MIDAS-SV minus TVP-MIDAS-SV-R1 | 0.3 | -0.2 | 0.0 | -0.3 | 0.2 | 0.3 |
-| Weights vary: TVP-MIDAS-SV-R2 minus MIDAS-SV | -0.1 | -0.2 | 0.0 | 0.1 | -0.1 | 0.1 |
+| Coefficients vary: TVP-MIDAS-SV-R1 minus MIDAS-SV | 0.6 | 0.3 | -0.5 | 3.4 | 5.9 | 5.1 |
+| Weights vary: TVP-MIDAS-SV minus TVP-MIDAS-SV-R1 | 0.3 | 0.0 | -0.2 | -0.2 | -0.1 | 0.3 |
+| Weights vary: TVP-MIDAS-SV-R2 minus MIDAS-SV | 0.1 | -0.3 | -0.1 | -0.1 | -0.2 | 0.0 |
 
 The gain from time-varying coefficients comes after 2008. Over 1990-2007, TVP-MIDAS-SV-R1 and
-MIDAS-SV differ by at most 0.7 in log predictive likelihood at any horizon; over 2008-2019,
-TVP-MIDAS-SV-R1 gains 3.5 to 5.7.
+MIDAS-SV differ by at most 0.6 in log predictive likelihood at any horizon; over 2008-2019,
+TVP-MIDAS-SV-R1 gains 3.4 to 5.9.
 
 ![Nowcasts of GDP growth from TVP-MIDAS-SV-R1](fig_nowcast.png)
 
@@ -230,12 +239,15 @@ outside the interval.*
 ## The Information at Each Origin
 
 The information at each origin follows Table 2 of Chan, Poon and Zhu (2026). At the end of month
-$`i`$ of a quarter, the NFCI and the spread are known up to that day and GDP up to the previous
-quarter. Industrial production is released a month late, so it is known up to month $`i - 1`$.
-Each origin has its own regression, and every quarter of its sample is aligned to that origin in
-the same way. The three monthly regressors are the three months before the origin's month. The
-weekly and daily observations are those of the three months ending at the origin. A weekly window
-holds 12 to 14 observations and a daily window 59 to 65.
+$`i`$ of a quarter, GDP is known up to the previous quarter and the spread up to that day.
+Industrial production is released a month late, so it is known up to month $`i - 1`$. The NFCI of
+a week, which ends on a Friday, is released on the following Wednesday, or on the Thursday when a
+federal holiday falls earlier in that week. At the end of January 2000, for example, the latest
+NFCI is that of 21 January, released on 26 January. Each origin has its own regression, and every
+quarter of its sample is aligned to that origin in the same way. The three monthly regressors are
+the three months before the origin's month. The weekly and daily observations are those of the
+three months ending at the origin that are released by then. A weekly window holds 12 or 13
+observations and a daily window 59 to 65.
 
 ## Checking the Sampler
 
@@ -243,9 +255,11 @@ The build checks the data before it runs the nowcasts. The information sets of 2
 the paper's Table 2, with industrial production up to December, January and February at the three
 origins. Every quarter's monthly regressors move one month from one origin to the next. The build
 then runs TVP-MIDAS-SV, with every variance estimated, on data generated from the model with the
-regressors of the US data. The 90 percent bands of the 150 quarters contain 88.5 percent of the
-true coefficients, 93.2 percent of the true NFCI weights and 89.3 percent of the true spread
-weights. The restrictions hold in every draw to 4e-14. Over every draw of the 1,920 nowcasts, the
+regressors of the US data. The 90 percent bands of the 150 quarters contain 83.0 percent of the
+true coefficients. The data say little about the shape of the weights, so their bands follow the
+prior, and how many true weights they contain depends on where in the prior these were drawn.
+Here the bands contain 75.3 percent of the true NFCI weights and 49.7 percent of the true spread
+weights. The restrictions hold in every draw to 7e-14. Over every draw of the 2,160 runs, the
 largest restriction residual is 3.0e-11.
 
 ## What Can Go Wrong
@@ -257,9 +271,14 @@ largest restriction residual is 3.0e-11.
 - **Revised data.** The data files hold today's revised series, so the nowcasts are pseudo real
   time. Chan, Poon and Zhu (2026) score their nowcasts on real-time vintages, and scores on
   revised data can differ.
-- **The prior on the variances of the weights.** The variances of the weights' random walks have
-  the prior $`\mathcal{IG}(10, 0.001)`$, which keeps the movements of the weights small. The
-  finding that time-varying weights add little holds under this prior.
+- **The prior on the variances of the weights.** The data say almost nothing about how fast the
+  weights move. In TVP-MIDAS-SV at h = 0, the posterior means of these variances stay within 10
+  percent of their prior means, so the prior sets how far the weights can move. On the scale of
+  the paper, the prior is $`\mathcal{IG}(10, 0.001\,n_j^2)`$, with $`n_j`$ the typical number of
+  observations in a window: 12 for the NFCI and 62 for the spread. With this prior at h = 0, the
+  relative RMSFE of TVP-MIDAS-SV and TVP-MIDAS-SV-R2 is 0.908 and 0.938, and their log scores
+  17.2 and 12.6. With the prior of this tutorial, Table 1 has 0.906 and 0.938, and 17.2 and 12.3.
+  Time-varying weights add little under either prior.
 - **A window without observations.** `ssm.midas_basis` stops with an error when a weekly or daily
   window holds no observation, as for a predictor that starts after the first quarter of the
   sample. Start the sample later, or leave the predictor out.
@@ -270,7 +289,8 @@ The script [`your_data.m`](your_data.m) runs the same comparison on a quarterly 
 own. Its settings block names the files and columns of the target and of the monthly, weekly or
 daily predictors. It sets whether to turn the target's levels into 400 times their log changes.
 For the monthly predictors, it sets their transformation and the months by which they are released
-late. It also sets the first quarter of the estimation sample, the models to compare, the number
+late. For the weekly and daily predictors, it sets the dates on which their values are released.
+It also sets the first quarter of the estimation sample, the models to compare, the number
 of quarters to nowcast, the draws per model and the seed. Last, it sets whether to nowcast the
 quarter after the last one observed, and where the report goes. Each monthly predictor enters as
 its three latest available months, and each weekly or daily predictor through a weighting function
@@ -301,6 +321,7 @@ mfile = fullfile(d, 'FRED-MD.csv'); mcols = {'INDPRO'}; mtransform = 'none'; msc
 mlag = 1;                          % months by which the monthly predictors are released late
 hfiles = {fullfile(d, 'NFCI_weekly.csv'), fullfile(d, 'T10Y3M_daily.csv')};
 hcols = {'NFCI', 'T10Y3M'};
+hrelease = {@nfci_release, []};    % the release dates of each weekly or daily predictor
 ```
 
 - **Levels or growth rates.** The target is in levels and becomes 400 times its log change
@@ -312,15 +333,18 @@ hcols = {'NFCI', 'T10Y3M'};
   inside it stops the script. A month with a missing value in any monthly predictor is dropped,
   and the months left must run without gaps. Missing weekly or daily values, such as the spread on
   holidays, are dropped, and every window must keep at least one observation.
-- **Timing.** The script reads the date of a weekly or daily value as the date on which it
-  becomes available. The value enters each nowcast whose window, the three months ending at the
-  origin, contains its date. A monthly value enters `mlag` months after its month. The script does
-  not model the publication delays of weekly or daily series. The NFCI of a week, for example, is
-  released a few days after the week ends. Nor does the script model data revisions, so with
-  today's files the nowcasts of past quarters are pseudo real time, as in this tutorial.
+- **Timing.** A weekly or daily value enters each nowcast whose window, the three months ending at
+  the origin, contains its date, once the value is released. For each weekly or daily predictor,
+  `hrelease` holds a function that turns its dates into release dates, or `[]` when its values
+  are released on their dates. The defaults are `nfci_release` for the NFCI, which gives the
+  Wednesday or Thursday after each week, and `[]` for the spread. A monthly value enters `mlag`
+  months after its month. The script does not model data revisions, so with today's files the
+  nowcasts of past quarters are pseudo real time, as in this tutorial.
 
 With the latest data, `latest = true` gives the nowcast a forecaster wants. This is each model's
-nowcast of the next quarter, at the latest month-end that all the predictors reach. The script
+nowcast of the next quarter, at the latest month-end that all the predictors reach: the monthly
+predictors up to their release lag, and each weekly or daily one with a release in the last seven
+days of the month. The script
 writes two files to `outdir`, which defaults to `tempdir` so that a run leaves the repository
 unchanged. The first, `midas_nowcast_report.csv`, has one row per model, with its scores and that
 nowcast with its 90 percent interval. The second, `midas_nowcast_report.mat`, holds the table with
@@ -334,13 +358,14 @@ To reproduce all results on this page, run the build script from the root of the
 run tutorials/midas_nowcast/build.m
 ```
 
-The script `build.m` checks the data and the sampler, runs the 1,920 nowcasts, scores them and
-draws the figures. With the Parallel Computing Toolbox it runs the nowcasts on parallel workers,
-and without it one after another, which takes several times as long. Each nowcast has its own
-seed, so the parallel and the serial runs give the same numbers. Each also has its own file in
-`runs/`, which is not part of the repository, so an interrupted build resumes where it stopped.
-The computation takes about four hours with 8 CPUs, using MATLAB R2025b on a computer with an
-Intel Core Ultra 7 255U processor and 32 GB of RAM.
+The script `build.m` checks the data and the sampler, runs the 1,920 nowcasts and the 240 of the
+prior check, scores them and draws the figures. With the Parallel Computing Toolbox it runs the
+nowcasts on parallel workers, and without it one after another, which takes several times as
+long. Each nowcast has its own seed, so the parallel and the serial runs give the same numbers.
+Each also has its own file in `runs/`, which is not part of the repository, so an interrupted
+build resumes where it stopped. A file is used again only if its settings, its data and the
+version of the code are those of the run. The computation takes about three hours with 8 CPUs,
+using MATLAB R2025b on a computer with an Intel Core Ultra 7 255U processor and 32 GB of RAM.
 
 The script prints every result in this tutorial, or the numbers they are computed from. It saves
 the figures in the same folder as this page, together with [`nowcasts.csv`](nowcasts.csv), which
