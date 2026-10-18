@@ -27,7 +27,8 @@
 %   'nsim'    : draws kept, default 10000;  'burnin' : draws discarded first, default 5000
 %   'seed'    : if given, rng(seed, 'twister') is set before the first draw
 %   'thin'    : k > 0 also keeps every kth kept draw of the paths in res.draws; default 0
-%   'quantiles' : probabilities of the nowcast quantiles, default [.05 .1 .5 .9 .95]
+%   'quantiles' : probabilities in (0, 1) of the nowcast quantiles, default
+%               [.05 .1 .5 .9 .95]
 %
 %   res.b_mean     : T x (k0+J) posterior means of the coefficients, those on X first
 %   res.theta_mean : 1 x J cell of T x 5 posterior means of the weights
@@ -131,6 +132,20 @@ for j = 1:J
 end
 if ~(isscalar(nsim) && nsim >= 1 && nsim == fix(nsim) && isscalar(burnin) && burnin >= 0 && burnin == fix(burnin))
     error('ssm:models:tvp_midas:badOption', 'nsim must be a positive integer and burnin a nonnegative integer');
+end
+if ~(isscalar(thin) && thin >= 0 && thin == fix(thin) && isscalar(tvb) && isscalar(tvtheta) && isscalar(sv))
+    error('ssm:models:tvp_midas:badOption', 'thin must be a nonnegative integer, and tvb, tvtheta and sv scalars');
+end
+if ~(isempty(probs) || (isvector(probs) && all(probs > 0 & probs < 1)))
+    error('ssm:models:tvp_midas:badOption', 'the quantiles must lie strictly between 0 and 1');
+end
+pv = [pr.Vb pr.Vtheta pr.Vg pr.omega2 pr.xi2 pr.sigma2g pr.sigma2];
+if numel(pv) ~= 11 || ~isnumeric(pv) || any(~isfinite(pv)) || any(pv <= 0)
+    error('ssm:models:tvp_midas:badOption', ['the prior needs positive scalars Vb, Vtheta and Vg, ' ...
+        'and positive pairs [nu S] for omega2, xi2, sigma2g and sigma2']);
+end
+if var(y) == 0
+    error('ssm:models:tvp_midas:badData', 'y is constant');
 end
 nowcast = nr == n + 1;
 if nowcast

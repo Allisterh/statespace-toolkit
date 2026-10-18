@@ -140,7 +140,9 @@ Each sweep of the sampler takes four steps:
    [`ssm.restrict`](../../core/+ssm/restrict.m), which conditions the draw on the restrictions
    (Algorithm 2.6 of Rue and Held, 2005).
 3. The log-volatility, by [`ssm.ksc_rw_diffuse`](../../core/+ssm/ksc_rw_diffuse.m), the
-   auxiliary mixture sampler of Kim, Shephard and Chib (1998).
+   auxiliary mixture sampler of Kim, Shephard and Chib (1998). It approximates the log
+   chi-squared distribution of each log squared standardized error by a mixture of seven normal
+   distributions.
 4. The variances of the random walks, and the error variance in the models with constant
    volatility.
 
@@ -188,8 +190,9 @@ third month add little.
 
 ### Time-Varying Coefficients or Time-Varying Weights?
 
-TVP-MIDAS-SV and TVP-MIDAS-SV-R1 differ only in whether the weights vary. Their scores agree to
-within 0.4 in the log predictive likelihood and 0.006 in the relative RMSFE at each horizon.
+TVP-MIDAS-SV and TVP-MIDAS-SV-R1 differ in whether the weights vary, and so in how their
+restriction holds: in every quarter, or on average over the sample. Their scores agree to within
+0.4 in the log predictive likelihood and 0.006 in the relative RMSFE at each horizon.
 TVP-MIDAS-SV-R2 and MIDAS-SV differ the same way, with the coefficients held constant, and agree
 to within 0.4 and 0.004. Time variation in the coefficients lowers the RMSFE by 3 to 5 percent of
 the AR(2)'s and raises the log predictive likelihood by 4 to 6. Under the priors used here, time
@@ -219,10 +222,10 @@ TVP-MIDAS-SV-R1 gains 3.5 to 5.7.
 ![Nowcasts of GDP growth from TVP-MIDAS-SV-R1](fig_nowcast.png)
 
 *Figure 3: Real GDP growth (dots) and its recursive nowcast from TVP-MIDAS-SV-R1 at the end of the
-quarter (h = 0), with the 90 percent predictive interval. Each nowcast uses only the data
-available at its origin. The nowcast misses the fall of 2008Q4, -8.9 percent against a nowcast of
-0.6, and catches that of 2009Q1, -4.6 against -6.7. Of the 120 outcomes, 14 fall outside the
-interval.*
+quarter (h = 0), with the 90 percent predictive interval. Each nowcast uses the information set of
+its origin, in today's revised data. The nowcast misses the fall of 2008Q4, -8.9 percent against a
+nowcast of 0.6, and catches that of 2009Q1, -4.6 against -6.7. Of the 120 outcomes, 14 fall
+outside the interval.*
 
 ## The Information at Each Origin
 

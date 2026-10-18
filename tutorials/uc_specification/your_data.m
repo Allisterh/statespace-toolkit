@@ -113,7 +113,8 @@ end
 
 %% ---- the report ----
 if ~isempty(outdir)
-    report = array2table([res fut], 'VariableNames', {'rmsfe', 'log_predictive_likelihood', ...
+    if ~isfolder(outdir), mkdir(outdir); end
+    report = array2table([res fut],'VariableNames', {'rmsfe', 'log_predictive_likelihood', ...
         'forecast_next4', 'forecast_lower_90', 'forecast_upper_90'});
     report = [table(labels', names', 'VariableNames', {'model', 'id'}) report];
     [msg, id] = lastwarn;
