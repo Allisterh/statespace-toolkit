@@ -37,6 +37,10 @@ likelihood:
 - [How to Estimate a State Space Model by Gibbs Sampling](guides/gibbs_sampler/)
 - [How to Compute the Integrated Likelihood of a State Space Model](guides/integrated_likelihood/)
 
+The second series does the same for a regression whose coefficients follow random walks:
+
+- [How to Draw Time-Varying Regression Coefficients](guides/tvp_states/)
+
 The ten scripts in [`examples/`](examples/) each run in under a minute. Start with ex01.
 ex01-ex06 are linear Gaussian models. ex07-ex09 add stochastic volatility: ex07 and ex08 draw the
 log-volatility by the auxiliary mixture sampler, and ex09, in which the volatility also enters the
