@@ -242,9 +242,10 @@ Monte Carlo standard errors. The posterior mean of the slope is 0.93, with 90 pe
 
 ## Next
 
-The next guide in this series compares the model with a constant slope and the TVP regression by
-their marginal likelihoods. Among the examples, [ex03](../../examples/ex03_tvp_regression.m) runs
-this sampler on a Phillips curve for US PCE inflation.
+[How to Tell Whether a Coefficient Varies over Time](../tvp_compare/) compares the model with a
+constant slope and the TVP regression by their marginal likelihoods. Among the examples,
+[ex03](../../examples/ex03_tvp_regression.m) runs this sampler on a Phillips curve for US PCE
+inflation.
 
 ## Using This Method in Your Research
 

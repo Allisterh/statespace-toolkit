@@ -17,13 +17,13 @@ The three guides use the local level model on the same generated data.
 
 ## Time-Varying Parameters
 
-The guides in this series use a regression whose coefficients follow random walks, on generated
-data.
+The three guides use a regression whose coefficients follow random walks, on generated data.
 
 | Guide | What it shows | Core functions |
 |---|---|---|
 | [How to Draw Time-Varying Regression Coefficients](tvp_states/) | Stack the regression over time and draw the whole path of the coefficients at once | `ssm.simulate_states`, `ssm.surform`, `ssm.diffmat` |
 | [How to Estimate a TVP Regression by Gibbs Sampling](tvp_gibbs/) | Draw the variances and the initial coefficients along with the coefficients, and check the chain | `ssm.simulate_states`, `ssm.surform`, `ssm.inefficiency_factor` |
+| [How to Tell Whether a Coefficient Varies over Time](tvp_compare/) | Compare models whose coefficients vary or stay constant by their marginal likelihoods | `ssm.intlike`, `ssm.surform`, `ssm.diffmat` |
 
 The [examples](../examples/) run the core functions on additional models, with real and generated
 data, and the [tutorials](../tutorials/) answer empirical questions with the models of published
