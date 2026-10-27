@@ -13,8 +13,8 @@ in all. The precision sampler draws this whole path at once, in the same three s
 [How to Draw the States of an Unobserved Components Model](../uc_states/). Stack the equations,
 read the precision matrix $`\mathbf{K}`$ and the vector $`\mathbf{c}`$ off the log density, and
 call [`ssm.simulate_states`](../../core/+ssm/simulate_states.m). The new parts are the stacked
-design matrix and the order of the states. In this guide the parameters are known; the next guide
-in this series draws them as well.
+design matrix and the order of the states. In this guide the parameters are known;
+[How to Estimate a TVP Regression by Gibbs Sampling](../tvp_gibbs/) draws them as well.
 
 To draw the figures first, run from the root of the repository:
 
@@ -224,10 +224,10 @@ coefficients.
 
 ## Next
 
-The next guide in this series draws $`\sigma^2`$, the variances $`\omega_i^2`$ and
-$`\boldsymbol{\beta}_0`$ along with the coefficients. Among the examples,
-[ex03](../../examples/ex03_tvp_regression.m) estimates a TVP Phillips curve on US PCE inflation
-and times the precision sampler against the Kalman filter with backward sampling.
+[How to Estimate a TVP Regression by Gibbs Sampling](../tvp_gibbs/) draws $`\sigma^2`$, the
+variances $`\omega_i^2`$ and $`\boldsymbol{\beta}_0`$ along with the coefficients. Among the
+examples, [ex03](../../examples/ex03_tvp_regression.m) estimates a TVP Phillips curve on US PCE
+inflation and times the precision sampler against the Kalman filter with backward sampling.
 
 ## Using This Method in Your Research
 

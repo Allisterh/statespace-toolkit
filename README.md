@@ -40,6 +40,7 @@ likelihood:
 The second series does the same for a regression whose coefficients follow random walks:
 
 - [How to Draw Time-Varying Regression Coefficients](guides/tvp_states/)
+- [How to Estimate a TVP Regression by Gibbs Sampling](guides/tvp_gibbs/)
 
 The ten scripts in [`examples/`](examples/) each run in under a minute. Start with ex01.
 ex01-ex06 are linear Gaussian models. ex07-ex09 add stochastic volatility: ex07 and ex08 draw the
@@ -130,8 +131,8 @@ sampler from them.
 | `ssm.ksc_rw_noncentered` | Draws a random-walk log-volatility in the noncentered form of Chan (2018), and returns the conditional mean and variance of its scale, which the Savage-Dickey ratio of that paper uses | not yet in an example |
 | `ssm.tnormrnd` | Draws from a truncated normal distribution | ex02, the UC tutorial |
 | `ssm.shaded_band` | Shades credible bands in figures | ex01, ex03, ex04, ex07-ex09, the MIDAS tutorial |
-| `ssm.inefficiency_factor` | Computes the inefficiency factor of MCMC draws, the number of draws that carry the information of one independent draw | the Gibbs sampling and integrated likelihood guides, the UC tutorial |
-| `ssm.mcse` | Computes the Monte Carlo standard error of a posterior mean estimated from MCMC draws | the Gibbs sampling and integrated likelihood guides |
+| `ssm.inefficiency_factor` | Computes the inefficiency factor of MCMC draws, the number of draws that carry the information of one independent draw | the Gibbs sampling, integrated likelihood and TVP Gibbs sampling guides, the UC tutorial |
+| `ssm.mcse` | Computes the Monte Carlo standard error of a posterior mean estimated from MCMC draws | the Gibbs sampling, integrated likelihood and TVP Gibbs sampling guides |
 | `ssm.geweke` | Computes the convergence diagnostic of Geweke (1992), which compares the means of an early and a late segment of a chain | not yet in an example |
 | `ssm.specvar0` | Estimates the long-run variance of the mean of MCMC draws, for the three diagnostics above | through the diagnostics |
 

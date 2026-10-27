@@ -23,6 +23,7 @@ data.
 | Guide | What it shows | Core functions |
 |---|---|---|
 | [How to Draw Time-Varying Regression Coefficients](tvp_states/) | Stack the regression over time and draw the whole path of the coefficients at once | `ssm.simulate_states`, `ssm.surform`, `ssm.diffmat` |
+| [How to Estimate a TVP Regression by Gibbs Sampling](tvp_gibbs/) | Draw the variances and the initial coefficients along with the coefficients, and check the chain | `ssm.simulate_states`, `ssm.surform`, `ssm.inefficiency_factor` |
 
 The [examples](../examples/) run the core functions on additional models, with real and generated
 data, and the [tutorials](../tutorials/) answer empirical questions with the models of published
