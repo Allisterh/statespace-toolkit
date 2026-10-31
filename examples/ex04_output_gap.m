@@ -10,7 +10,7 @@
 % of Chan and Jeliazkov (2009).
 %
 % The example estimates the output gap and trend growth of US real GDP, 1947Q1-2019Q4,
-% as in Section 9.1.3 of the book Bayesian Macroeconometrics (Chan, forthcoming). The AR
+% as in Section 9.1.3 of the book Bayesian Macroeconometrics (Chan, 2027). The AR
 % coefficients are drawn from their Gaussian full conditional without the stationarity
 % restriction, and a nonstationary draw leaves phi at its previous value. sigtau2, under a
 % uniform prior on (0, 0.01), is drawn by the Griddy-Gibbs sampler of Ritter and Tanner
@@ -19,7 +19,7 @@
 % every quarter, see trend-cycle-toolkit (github.com/joshuaccchan/trend-cycle-toolkit).
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 9.1.3.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated
 % Likelihood Estimation in State Space Models, International Journal of

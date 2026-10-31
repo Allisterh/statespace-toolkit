@@ -11,12 +11,12 @@
 % The example extracts a business-cycle indicator, the factor, from FRED-MD: 92 monthly US
 % series from March 1959 to November 2025, each transformed as McCracken and Ng (2016)
 % recommend and standardized, with industrial production first. The estimates reproduce
-% those reported in the book Bayesian Macroeconometrics (Chan, forthcoming): a posterior
+% those reported in the book Bayesian Macroeconometrics (Chan, 2027): a posterior
 % mean of phi of about 0.27, with a 95% credible interval of (0.20, 0.33), and a factor
 % near -16.5 in April 2020.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 11.2.3.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated
 % Likelihood Estimation in State Space Models, International Journal of

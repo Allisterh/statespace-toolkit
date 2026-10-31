@@ -4,7 +4,7 @@
 [`ssm.surform`](../../core/+ssm/surform.m) and [`ssm.diffmat`](../../core/+ssm/diffmat.m). Method:
 [Chan and Eisenstat (2015)](../../CITING.md#chan-and-eisenstat-2015),
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009) and
-[Chan (forthcoming)](../../CITING.md#chan-forthcoming).*
+[Chan (2027)](../../CITING.md#chan-2027).*
 
 We use marginal likelihoods to assess whether the coefficients of a time-varying parameter (TVP)
 regression vary over time. We compare four regressions with an intercept and one regressor:
@@ -358,13 +358,13 @@ the code of Chan and Eisenstat (2015).
 The marginal likelihoods follow Chan and Eisenstat (2015), who compare a VAR, a TVP-VAR and a
 dynamic factor VAR by importance sampling. For the TVP-VAR, they integrate the time-varying
 coefficients out. `ssm.intlike` evaluates the integrated likelihood by the method of Chan and
-Jeliazkov (2009). Chan (forthcoming) gives the textbook treatment of both.
+Jeliazkov (2009). Chan (2027) gives the textbook treatment of both.
 [`CITING.md`](../../CITING.md) lists the paper behind each function of the toolkit and how to cite
 the toolkit itself.
 
 ## References
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C. and Eisenstat, E. (2015). Marginal Likelihood Estimation with the Cross-Entropy

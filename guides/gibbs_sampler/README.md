@@ -4,7 +4,7 @@
 [`ssm.diffmat`](../../core/+ssm/diffmat.m) and
 [`ssm.inefficiency_factor`](../../core/+ssm/inefficiency_factor.m). Method:
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009) and
-[Chan (forthcoming)](../../CITING.md#chan-forthcoming), Sections 6.3, 6.5.2 and 9.1.1.*
+[Chan (2027)](../../CITING.md#chan-2027), Sections 6.3, 6.5.2 and 9.1.1.*
 
 A Gibbs sampler draws the unknowns of a model in blocks, each from its distribution given the data
 and the current values of the other blocks, and repeats. In a state space model the states form
@@ -28,7 +28,7 @@ The model is
 $$y_t = \tau_t + \varepsilon_t, \qquad \varepsilon_t \sim \mathcal{N}(0, \sigma^2), \qquad\qquad \tau_t = \tau_{t-1} + \eta_t, \qquad \eta_t \sim \mathcal{N}(0, \omega^2),$$
 
 with $`\sigma^2`$, $`\omega^2`$ and the initial value $`\tau_0`$ unknown. We use the priors of
-Section 9.1.1 of the book *Bayesian Macroeconometrics* (Chan, forthcoming),
+Section 9.1.1 of the book *Bayesian Macroeconometrics* (Chan, 2027),
 
 $$\tau_0 \sim \mathcal{N}(a_0, b_0), \qquad \sigma^2 \sim \mathcal{IG}(\nu_{\sigma^2}, S_{\sigma^2}), \qquad \omega^2 \sim \mathcal{IG}(\nu_{\omega^2}, S_{\omega^2}),$$
 
@@ -235,7 +235,7 @@ function of the toolkit and how to cite the toolkit itself.
 
 ## References
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated Likelihood Estimation

@@ -19,7 +19,7 @@
 % The long-run variances are estimated by ssm.specvar0. Code-identical to
 % bvar.diag.geweke in bvar-toolkit apart from those calls and the error identifiers
 % (ssm:geweke:*), and the two must stay so. For a textbook discussion, see Chan
-% (forthcoming), Section 6.5.1.
+% (2027), Section 6.5.1.
 %
 % See:
 % Geweke, J. (1992). Evaluating the Accuracy of Sampling-Based Approaches to the
@@ -27,7 +27,7 @@
 % A.F.M. Smith (Eds), Bayesian Statistics 4, 169-193, Oxford University Press.
 % Newey, W.K. and West, K.D. (1994). Automatic Lag Selection in Covariance Matrix
 % Estimation, Review of Economic Studies, 61(4): 631-653.
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 6.5.1.
 
 function [Z, pval, info] = geweke(draws, a, b, L)

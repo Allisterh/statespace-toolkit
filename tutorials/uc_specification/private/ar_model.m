@@ -10,7 +10,7 @@ function f = ar_model(y, p, nsim, burnin)
 %   f.beta, f.sig2         : the posterior draws
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Chapter 2.
 T = numel(y) - p;
 X = ones(T, p + 1);

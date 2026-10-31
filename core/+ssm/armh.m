@@ -22,11 +22,11 @@
 %
 % The proposal is g = N(alphahat, K^{-1}) at the mode alphahat. Candidates from g
 % are kept with probability min{f/(c g), 1}, and the survivor passes an MH step.
-% For a textbook discussion, see Chan (forthcoming), Sections 6.2.3, 10.2.2 and
+% For a textbook discussion, see Chan (2027), Sections 6.2.3, 10.2.2 and
 % 10.3.3. Written for this toolkit.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Sections 6.2.3, 10.2.2 and 10.3.3.
 % Chan, J.C.C. (2017). The Stochastic Volatility in Mean Model with Time-Varying
 % Parameters: An Application to Inflation Modeling, Journal of Business and

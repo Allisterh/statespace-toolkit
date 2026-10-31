@@ -19,7 +19,7 @@
 % from the error identifiers (ssm:diffmat:*); the two must stay so.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 9.1.1.
 
 function H = diffmat(T, a)

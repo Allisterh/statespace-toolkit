@@ -11,13 +11,13 @@
 %
 % The long-run variance is estimated by ssm.specvar0. Code-identical to bvar.diag.mcse
 % in bvar-toolkit apart from that call, and the two must stay so. For a textbook
-% discussion, see Chan (forthcoming), Section 6.5.2.
+% discussion, see Chan (2027), Section 6.5.2.
 %
 % See:
 % Geweke, J. (1992). Evaluating the Accuracy of Sampling-Based Approaches to the
 % Calculation of Posterior Moments. In: J.M. Bernardo, J.O. Berger, A.P. Dawid and
 % A.F.M. Smith (Eds), Bayesian Statistics 4, 169-193, Oxford University Press.
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 6.5.2.
 
 function MCSE = mcse(draws, L)

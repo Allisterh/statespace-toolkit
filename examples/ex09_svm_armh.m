@@ -11,7 +11,7 @@
 % Metropolis-Hastings step of Chan (2017), whose Gaussian proposal is centered at the mode
 % of the conditional density of h. A Metropolis-Hastings step with the t proposal of
 % Chan (2017) draws (mu, phi) jointly. For a textbook discussion, see Sections 6.2.3,
-% 10.3.3 and 10.3.4 of the book Bayesian Macroeconometrics (Chan, forthcoming).
+% 10.3.3 and 10.3.4 of the book Bayesian Macroeconometrics (Chan, 2027).
 %
 % Section 1 estimates the model. The first candidate for h is accepted outright, since
 % from a start far from the target the chain can reject every candidate.
@@ -21,7 +21,7 @@
 % the default, 3.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Sections 6.2.3, 10.3.3 and 10.3.4.
 % Chan, J.C.C. (2017). The Stochastic Volatility in Mean Model with Time-Varying
 % Parameters: An Application to Inflation Modeling, Journal of Business and

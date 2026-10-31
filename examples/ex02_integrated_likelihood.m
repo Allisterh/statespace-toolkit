@@ -2,7 +2,7 @@
 %
 % The data are quarterly US PCE inflation, 1960Q1-2024Q4. M1 is the local level model
 % of ex01, y_t = tau_t + eps_t with eps_t ~ N(0, sig2). M2, the model of Section 9.1.1
-% of the book Bayesian Macroeconometrics (Chan, forthcoming), lets the
+% of the book Bayesian Macroeconometrics (Chan, 2027), lets the
 % transitory component follow an AR(1): eps_t = rho*eps_{t-1} + u_t with
 % u_t ~ N(0, sig2), eps_0 = 0 and rho ~ U(-1, 1). In both, tau_t = tau_{t-1} + eta_t,
 % eta_t ~ N(0, omega2), with tau_1 ~ N(tau0, omega2). Given
@@ -30,7 +30,7 @@
 % three in M2, few enough for a grid. The two methods agree to within 0.01.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Sections 5.1.4, 5.1.6, 9.1.1 and 9.1.2, and
 % Exercise 9.3.
 % Chan, J.C.C. and Eisenstat, E. (2015). Marginal Likelihood Estimation with the

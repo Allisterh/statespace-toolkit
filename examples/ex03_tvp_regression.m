@@ -9,7 +9,7 @@
 % Jeliazkov (2009).
 %
 % Section 1 estimates the time-varying parameter Phillips curve of Section 9.3.2 of the
-% book Bayesian Macroeconometrics (Chan, forthcoming): US PCE inflation on the output gap
+% book Bayesian Macroeconometrics (Chan, 2027): US PCE inflation on the output gap
 % and lagged inflation, 1960Q2-2019Q4, with x_t = (1, gap_t, y_{t-1})'.
 %
 % Section 2 compares the speed of the precision sampler with that of the Kalman filter
@@ -26,7 +26,7 @@
 % See:
 % Carter, C.K. and Kohn, R. (1994). On Gibbs Sampling for State Space Models,
 % Biometrika, 81(3): 541-553.
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 9.3.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated
 % Likelihood Estimation in State Space Models, International Journal of

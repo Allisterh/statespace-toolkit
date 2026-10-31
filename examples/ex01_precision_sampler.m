@@ -2,7 +2,7 @@
 %
 % y_t = tau_t + eps_t, eps_t ~ N(0, sig2), and tau_t = tau_{t-1} + eta_t,
 % eta_t ~ N(0, omega2), with tau_1 ~ N(tau0, omega2). This is the model of Section 9.1.1
-% of the book Bayesian Macroeconometrics (Chan, forthcoming) with the AR(1) coefficient of
+% of the book Bayesian Macroeconometrics (Chan, 2027) with the AR(1) coefficient of
 % eps_t set to 0. Given y and the parameters, the trend tau = (tau_1, ..., tau_T)' is
 % N(tauhat, K^{-1}) with K tridiagonal.
 % ssm.simulate_states draws the whole path at once from the Cholesky factor of K,
@@ -16,7 +16,7 @@
 % inflation, 1948M1-2019M12, with sig2, omega2 and tau0 unknown.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 9.1.1.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated
 % Likelihood Estimation in State Space Models, International Journal of

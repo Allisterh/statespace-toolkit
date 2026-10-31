@@ -32,7 +32,7 @@ To credit the software as well, cite the toolkit record at the end.
 | The Kalman filter with backward sampling | ex03 | [Carter and Kohn (1994)](#carter-and-kohn-1994); [Frühwirth-Schnatter (1994)](#frühwirth-schnatter-1994) |
 | FRED-MD data | ex06 | [McCracken and Ng (2016)](#mccracken-and-ng-2016) |
 | Diagnostics for MCMC output: inefficiency factors, Monte Carlo standard errors and the convergence diagnostic | `ssm.inefficiency_factor`, `ssm.mcse`, `ssm.geweke`, `ssm.specvar0`; the Gibbs sampling and integrated likelihood guides, the UC tutorial | [Geweke (1992)](#geweke-1992); [Newey and West (1987)](#newey-and-west-1987) for the long-run variance and [Newey and West (1994)](#newey-and-west-1994) for the default lag of `ssm.geweke` |
-| The other library functions: `ssm.diffmat`, `ssm.lagpolymat`, `ssm.surform`, `ssm.mode_newton`, `ssm.tnormrnd` and `ssm.shaded_band` | | [Chan (forthcoming)](#chan-forthcoming) |
+| The other library functions: `ssm.diffmat`, `ssm.lagpolymat`, `ssm.surform`, `ssm.mode_newton`, `ssm.tnormrnd` and `ssm.shaded_band` | | [Chan (2027)](#chan-2027) |
 
 ## References
 
@@ -132,9 +132,9 @@ the Bayes factor is a Savage-Dickey density ratio, so no marginal likelihood is 
 }
 ```
 
-### Chan (forthcoming)
+### Chan (2027)
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC.
 [Sample chapters](https://joshuachan.org/papers/BayesMacroBook_sample.pdf) ·
 Code: [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics)
@@ -147,7 +147,7 @@ library functions that no paper in this list introduces.
   author    = {Chan, Joshua C. C.},
   title     = {Bayesian Macroeconometrics: Methods and Applications},
   publisher = {Chapman \& Hall/CRC},
-  note      = {Forthcoming}
+  year      = {2027}
 }
 ```
 

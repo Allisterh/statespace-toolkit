@@ -3,7 +3,7 @@
 *Code: [`guide.m`](guide.m), with [`ssm.simulate_states`](../../core/+ssm/simulate_states.m),
 [`ssm.surform`](../../core/+ssm/surform.m) and [`ssm.diffmat`](../../core/+ssm/diffmat.m). Method:
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009) and
-[Chan (forthcoming)](../../CITING.md#chan-forthcoming).*
+[Chan (2027)](../../CITING.md#chan-2027).*
 
 In a time-varying parameter (TVP) regression, the coefficients change over time. A state equation
 sets how they change, for example as random walks or as stationary autoregressions. Steps 1 to 3
@@ -231,13 +231,13 @@ inflation and times the precision sampler against the Kalman filter with backwar
 
 ## Using This Method in Your Research
 
-The precision sampler is the method of Chan and Jeliazkov (2009), and Chan (forthcoming) gives its
+The precision sampler is the method of Chan and Jeliazkov (2009), and Chan (2027) gives its
 textbook treatment for the TVP regression. [`CITING.md`](../../CITING.md) lists the paper behind
 each function of the toolkit and how to cite the toolkit itself.
 
 ## References
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated Likelihood Estimation

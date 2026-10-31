@@ -81,7 +81,7 @@ trend, is constant, a random walk or a stationary AR(1) process:
 
 | Model | Gap | Trend innovation | Model from |
 |---|---|---|---|
-| UC | constant variance | constant variance | Chan (forthcoming), Section 9.1.1, with $`\rho = 0`$ |
+| UC | constant variance | constant variance | Chan (2027), Section 9.1.1, with $`\rho = 0`$ |
 | UC-SVgap | random-walk log-volatility | constant variance | UC, with the gap of UCSV |
 | UCSV | random-walk log-volatility | random-walk log-volatility | Stock and Watson (2007) |
 | UC-MA | MA(1), AR(1) log-volatility | constant variance | Chan (2013) |
@@ -351,7 +351,7 @@ Chan, J. C. C. (2018). Specification Tests for Time-Varying Parameter Models wit
 Volatility. *Econometric Reviews*, 37(8): 807-823.
 [doi:10.1080/07474938.2016.1167948](https://doi.org/10.1080/07474938.2016.1167948)
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C., Clark, T. E. and Koop, G. (2018). A New Model of Inflation, Trend Inflation, and

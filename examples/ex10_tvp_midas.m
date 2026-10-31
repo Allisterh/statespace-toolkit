@@ -20,7 +20,7 @@
 % Given theta the model is linear in b, and given b it is linear in theta, so each block
 % is drawn from its banded precision in one call to ssm.simulate_states, the precision
 % sampler of Chan and Jeliazkov (2009), as in the time-varying parameter regression of
-% Section 9.3 of the book Bayesian Macroeconometrics (Chan, forthcoming). Separating
+% Section 9.3 of the book Bayesian Macroeconometrics (Chan, 2027). Separating
 % beta_t from theta_t needs a normalization, and Chan, Poon and Zhu (2026) impose the T
 % restrictions theta_t'*V*1 = 1, which make the draw of theta Gaussian truncated to a
 % hyperplane. ssm.restrict imposes them on an unconstrained draw (Algorithm 2.6 of Rue
@@ -35,7 +35,7 @@
 % the data, with the innovation variances set at their prior means.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Sections 9.3 and 10.1.1.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated
 % Likelihood Estimation in State Space Models, International Journal of

@@ -3,7 +3,7 @@
 *Code: [`guide.m`](guide.m), with [`ssm.simulate_states`](../../core/+ssm/simulate_states.m) and
 [`ssm.diffmat`](../../core/+ssm/diffmat.m). Method:
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009) and
-[Chan (forthcoming)](../../CITING.md#chan-forthcoming), Sections 9.1.1 and 9.2.*
+[Chan (2027)](../../CITING.md#chan-2027), Sections 9.1.1 and 9.2.*
 
 The precision sampler draws the whole path of the states at once from their conditional
 distribution, $`\mathcal{N}(\hat{\boldsymbol{\tau}}, \mathbf{K}^{-1})`$. It needs two inputs: the
@@ -29,7 +29,7 @@ The model decomposes $`y_t`$ into a trend and a transitory component,
 $$y_t = \tau_t + \varepsilon_t, \qquad \varepsilon_t \sim \mathcal{N}(0, \sigma^2), \qquad\qquad \tau_t = \tau_{t-1} + \eta_t, \qquad \eta_t \sim \mathcal{N}(0, \omega^2),$$
 
 where the trend starts from a known $`\tau_0`$. Section 9.1.1 of the book *Bayesian
-Macroeconometrics* (Chan, forthcoming) lets the transitory component follow an AR(1) process; we
+Macroeconometrics* (Chan, 2027) lets the transitory component follow an AR(1) process; we
 start with a serially uncorrelated transitory component and add the AR(1) in Step 4.
 
 ## Step 1: Stack the Equations
@@ -240,7 +240,7 @@ toolkit and how to cite the toolkit itself.
 
 ## References
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated Likelihood Estimation

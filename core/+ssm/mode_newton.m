@@ -1,5 +1,5 @@
 % ssm.mode_newton - the mode of a concave log density by Newton-Raphson, each step
-% solved with the banded negative Hessian. See Chan (forthcoming), Section 10.2.2.
+% solved with the banded negative Hessian. See Chan (2027), Section 10.2.2.
 %
 %   [alphahat, K] = ssm.mode_newton(alpha0, gradK)
 %   [alphahat, K, iter] = ssm.mode_newton(alpha0, gradK, 'Tol', tol, 'MaxIter', m)
@@ -18,7 +18,7 @@
 % toolkit.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Sections 10.2.2 and 10.3.3.
 
 function [alphahat, K, iter] = mode_newton(alpha0, gradK, opts)

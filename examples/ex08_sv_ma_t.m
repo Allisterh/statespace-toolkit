@@ -33,7 +33,7 @@
 %
 % Steps 3-5 do not condition on the component indicators, so they come after h and
 % before the next draw of the indicators, the order of Del Negro and Primiceri (2015);
-% see Section 10.1.1 of the book Bayesian Macroeconometrics (Chan, forthcoming).
+% see Section 10.1.1 of the book Bayesian Macroeconometrics (Chan, 2027).
 %
 % On the daily silver returns of Chan and Hsiao (2014), January 2005 to December 2012,
 % both extensions matter. Under SV-MA-t the 90% interval of psi is about (-0.12, -0.05),
@@ -43,7 +43,7 @@
 % mean.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 10.1.1.
 % Chan, J.C.C. (2013). Moving Average Stochastic Volatility Models with Application to
 % Inflation Forecast, Journal of Econometrics, 176(2): 162-172.

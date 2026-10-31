@@ -17,7 +17,7 @@
 % another order. Not interchangeable with ssm.ksc_rw_h0: another state equation.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 10.1.1.
 % Chan, J.C.C. (2013). Moving Average Stochastic Volatility Models with
 % Application to Inflation Forecast, Journal of Econometrics, 176(2): 162-172.

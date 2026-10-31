@@ -22,7 +22,7 @@ are tested on MATLAB R2025b, on Windows and, in the repository's continuous inte
 ## Learn the Methods
 
 Most of the methods are developed in the book *Bayesian Macroeconometrics: Methods and
-Applications* (Chapman & Hall/CRC, forthcoming): see the
+Applications* (Chapman & Hall/CRC, 2027): see the
 [sample chapters](https://joshuachan.org/papers/BayesMacroBook_sample.pdf) and
 [its code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics), with MATLAB,
 R and Python for all fourteen chapters. The missing-data draw of ex05 comes from Chan, Poon and

@@ -12,13 +12,13 @@
 %
 % Code-identical to bvar.diag.specvar0 in bvar-toolkit apart from the error identifier
 % (ssm:specvar0:*), and the two must stay so. For a textbook discussion, see Chan
-% (forthcoming), Section 6.5.
+% (2027), Section 6.5.
 %
 % See:
 % Newey, W.K. and West, K.D. (1987). A Simple, Positive Semi-Definite,
 % Heteroskedasticity and Autocorrelation Consistent Covariance Matrix,
 % Econometrica, 55(3): 703-708.
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 6.5.
 
 function S = specvar0(x, L)

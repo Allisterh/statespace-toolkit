@@ -65,7 +65,7 @@
 % See:
 % Chan, J.C.C. (2013). Moving Average Stochastic Volatility Models with Application to
 % Inflation Forecast, Journal of Econometrics, 176(2): 162-172.
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and Applications,
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and Applications,
 % Chapman & Hall/CRC.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated Likelihood
 % Estimation in State Space Models, International Journal of Mathematical Modelling and

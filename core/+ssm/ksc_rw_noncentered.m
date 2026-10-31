@@ -25,7 +25,7 @@
 % again with backslash; and the comments.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Section 10.1.1.
 % Chan, J.C.C. (2018). Specification Tests for Time-Varying Parameter Models with
 % Stochastic Volatility, Econometric Reviews, 37(8): 807-823.

@@ -5,7 +5,7 @@
 [`ssm.diffmat`](../../core/+ssm/diffmat.m) and
 [`ssm.inefficiency_factor`](../../core/+ssm/inefficiency_factor.m). Method:
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009) and
-[Chan (forthcoming)](../../CITING.md#chan-forthcoming), Sections 6.2.2, 6.3.2 and 9.2.*
+[Chan (2027)](../../CITING.md#chan-2027), Sections 6.2.2, 6.3.2 and 9.2.*
 
 The integrated likelihood of a state space model, also called the observed-data likelihood, is the
 density of the data given the parameters, with the states integrated out:
@@ -31,7 +31,7 @@ run guides/integrated_likelihood/guide.m
 
 ## The Model as a Regression on the States
 
-Section 9.2 of the book *Bayesian Macroeconometrics* (Chan, forthcoming) writes a linear Gaussian
+Section 9.2 of the book *Bayesian Macroeconometrics* (Chan, 2027) writes a linear Gaussian
 state space model in stacked form, as a regression on the states with a Gaussian prior:
 
 $$\mathbf{y} = \mathbf{Z}\boldsymbol{\alpha} + \boldsymbol{\varepsilon}, \qquad \boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{R}), \qquad\qquad \boldsymbol{\alpha} \sim \mathcal{N}(\mathbf{b}, \mathbf{P}^{-1}).$$
@@ -252,7 +252,7 @@ each function of the toolkit and how to cite the toolkit itself.
 
 ## References
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated Likelihood Estimation

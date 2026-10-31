@@ -19,7 +19,7 @@
 %
 % Section 2 runs the collapsed Gibbs sampler of Del Negro and Primiceri (2015), in the
 % four-block form of Section 10.1.1 of the book Bayesian Macroeconometrics (Chan,
-% forthcoming), on 1,000 periods generated from the model. The blocks are sigma2_h, h_0,
+% 2027), on 1,000 periods generated from the model. The blocks are sigma2_h, h_0,
 % s and h, and one call to ssm.ksc_rw_h0 draws s and then h. The section checks that
 % the posterior recovers the path of h and the parameters that generated the data.
 %
@@ -30,7 +30,7 @@
 % the mixture fits worst.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC, Sections 10.1.1 and 10.1.2, Example 10.1 and
 % Table 10.1.
 % Chan, J.C.C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated

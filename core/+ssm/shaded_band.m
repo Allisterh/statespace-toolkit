@@ -13,7 +13,7 @@
 % so; the same computation as shaded_band.m in the book's code for Chapter 14.
 %
 % See:
-% Chan, J.C.C. (forthcoming). Bayesian Macroeconometrics: Methods and
+% Chan, J.C.C. (2027). Bayesian Macroeconometrics: Methods and
 % Applications, Chapman & Hall/CRC.
 
 function h = shaded_band(x, lo, hi, shade)

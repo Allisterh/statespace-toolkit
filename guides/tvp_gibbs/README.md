@@ -4,7 +4,7 @@
 [`ssm.surform`](../../core/+ssm/surform.m), [`ssm.diffmat`](../../core/+ssm/diffmat.m) and
 [`ssm.inefficiency_factor`](../../core/+ssm/inefficiency_factor.m). Method:
 [Chan and Jeliazkov (2009)](../../CITING.md#chan-and-jeliazkov-2009) and
-[Chan (forthcoming)](../../CITING.md#chan-forthcoming).*
+[Chan (2027)](../../CITING.md#chan-2027).*
 
 We estimate the time-varying parameter (TVP) regression of
 [How to Draw Time-Varying Regression Coefficients](../tvp_states/) by Gibbs sampling, on the data
@@ -250,12 +250,12 @@ inflation.
 ## Using This Method in Your Research
 
 The sampler draws the coefficients by the precision sampler of Chan and Jeliazkov (2009), and Chan
-(forthcoming) gives its textbook treatment for the TVP regression. [`CITING.md`](../../CITING.md)
+(2027) gives its textbook treatment for the TVP regression. [`CITING.md`](../../CITING.md)
 lists the paper behind each function of the toolkit and how to cite the toolkit itself.
 
 ## References
 
-Chan, J. C. C. (forthcoming). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
+Chan, J. C. C. (2027). *Bayesian Macroeconometrics: Methods and Applications*. Chapman &
 Hall/CRC. [Code repository](https://github.com/joshuaccchan/bayesian-macroeconometrics)
 
 Chan, J. C. C. and Jeliazkov, I. (2009). Efficient Simulation and Integrated Likelihood Estimation
